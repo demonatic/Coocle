@@ -1,7 +1,7 @@
 <template>
     <div>
-        <!-- 组件不能写到template的根节点上，即每个组件只有一个根节点，这里的div就是这个template的根节点 -->
-        <div class="search-input" >
+        <div class="background-img">
+          <div class="search-input" >
           <i class="fa fa-search" @click="search()"></i>
           <input type="text" maxlength="46" v-model="keyword" placeholder="Search recipes"
             @keyup="get_suggestion($event)" @keydown.enter="search()" @keydown.down="suggestion_down()" @keydown.up.prevent="suggestion_up()"
@@ -15,6 +15,7 @@
                 {{value}}
               </li>
             </transition-group>
+          </div>
           </div>
         </div>
     </div>
@@ -38,7 +39,7 @@ export default {
       }
       console.log('call auto suggest')
       this.$http.jsonp('https://sug.so.360.cn/suggest?word=' + this.keyword + '&encodein=utf-8&encodeout=utf-8').then(function (res) {
-        console.log(res.data.s)
+        // console.log(res.data.s)
         this.suggest_items = res.data.s
       })
     },
@@ -84,12 +85,22 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+
+.background-img{
+  width: 1920px;
+  height: 1200px;
+  background: url('../assets/bg1.jpg') top no-repeat;
+  background-size: auto;
+}
+
 .search-input {
   height: 45px;
   width: 600px;
+  left: 0;
+  right: 0;
   margin: 0 auto;
-  margin-top: 10px;
-  position: relative;
+  margin-top: 30px;
+  position: fixed;
   display: flex;
 }
 
