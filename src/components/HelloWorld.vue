@@ -3,9 +3,19 @@
         <!-- 组件不能写到template的根节点上，即每个组件只有一个根节点，这里的div就是这个template的根节点 -->
         <div class="search-input" >
           <i class="fa fa-search" @click="search()"></i>
-          <input type="text" v-model="keyword" placeholder="Search recipes"
-          @keyup="get_suggestion($event)" @keydown.enter="search()">
+          <input type="text" maxlength="46" v-model="keyword" placeholder="Search recipes"
+            @keyup="get_suggestion($event)" @keydown.enter="search()" @keydown.down="suggestion_down()" @keydown.up.prevent="suggestion_up()"
+            @focus="show_suggestion()" @blur="hide_suggestion()"
+          >
           <span class="search-clear" @click="clear_input()">&times;</span>
+          <div class="search-select" v-if="suggestion_show_flag">
+            <transition-group name="itemfade" tag="ul" mode="out-in" v-cloak>
+              <li v-for="(value,index) in suggest_items" :class="{selectback:index==current_index}" class="search-select-option search-select-list"
+                @mouseover="suggestion_hover(index)" @click="suggestion_click(index)" :key="value">
+                {{value}}
+              </li>
+            </transition-group>
+          </div>
         </div>
     </div>
 </template>
@@ -15,7 +25,10 @@ export default {
   name: 'HelloWorld',
   data () {
     return {
-      keyword: ''
+      keyword: '',
+      suggest_items: [],
+      current_index: -1,
+      suggestion_show_flag: true
     }
   },
   methods: {
@@ -24,12 +37,46 @@ export default {
         return
       }
       console.log('call auto suggest')
+      this.$http.jsonp('https://sug.so.360.cn/suggest?word=' + this.keyword + '&encodein=utf-8&encodeout=utf-8').then(function (res) {
+        console.log(res.data.s)
+        this.suggest_items = res.data.s
+      })
     },
     search: function () {
       console.log('call search', this.keyword)
     },
     clear_input: function () {
       this.keyword = ''
+      this.suggest_items = []
+    },
+    suggestion_hover: function (index) {
+      this.current_index = index
+    },
+    suggestion_click: function (index) {
+      this.keyword = this.suggest_items[index]
+      this.search()
+    },
+    suggestion_up: function () {
+      this.current_index--
+      if (this.current_index === -1) {
+        this.current_index = this.suggest_items.length - 1
+      }
+      this.keyword = this.suggest_items[this.current_index]
+    },
+    suggestion_down: function () {
+      this.current_index++
+      if (this.current_index === this.suggest_items.length) {
+        this.current_index = 0
+      }
+      this.keyword = this.suggest_items[this.current_index]
+    },
+    hide_suggestion: function () {
+      setTimeout(() => {
+        this.suggestion_show_flag = false
+      }, 200)
+    },
+    show_suggestion: function () {
+      this.suggestion_show_flag = true
     }
   }
 }
@@ -43,6 +90,7 @@ export default {
   margin: 0 auto;
   margin-top: 10px;
   position: relative;
+  display: flex;
 }
 
 .search-input input{
@@ -56,11 +104,11 @@ export default {
   outline:none;
   font-size: 18px;
   font-weight:lighter;
-  font-family: "europa-regularregular, sans-serif";
+  font-family: "europa-regularregular, sans-serif", "Microsoft YaHei";
   float: left;
   padding-left: 10px;
   padding-right: 10px;
-  overflow: clip;
+  overflow: auto;
 }
 
 .search-input input:focus{
@@ -74,7 +122,15 @@ export default {
   width: 30px;
   height: 30px;
   left: 11px;
-  top: 14px;
+  top: 15px;
+  cursor: pointer;
+  color: rgb(98, 97, 97);
+  transform: rotateY(180deg);
+  z-index: 1;
+}
+
+.search-input i:hover{
+  filter: drop-shadow(1px 1px 1px rgb(182, 182, 182));
 }
 
 .search-clear {
@@ -88,5 +144,56 @@ export default {
   font-size: 20px;
   right: 110px;
   top: 12px
+}
+
+.search-select {
+  position: absolute;
+  top: 45px;
+  width: 500px;
+  top: 50px;
+  left: -20px;
+  box-sizing: border-box;
+  z-index: 10;
+}
+
+.search-select li{
+  border: 1px solid #d4d4d4;
+  border-top: none;
+  border-bottom: none;
+  background-color: #fff;
+  width: 100%;
+  list-style: none;
+}
+
+.search-select li:hover{
+  color: rgb(61, 155, 116);
+}
+
+.search-select ul{
+  margin:0;
+  text-align: left;
+  filter: drop-shadow(5px 5px 5px rgb(216, 215, 215))
+}
+
+.search-select-list {
+  transition: all 0.4s
+}
+
+.search-select-option {
+  box-sizing: border-box;
+  padding: 7px 10px;
+}
+
+.selectback{
+  background-color: #eee !important;
+  cursor: pointer;
+}
+
+.itemfade-enter,
+.itemfade-leave-active {
+    opacity: 0;
+}
+.itemfade-leave-active {
+    position: absolute;
 }
 </style>
