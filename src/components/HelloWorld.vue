@@ -1,23 +1,68 @@
 <template>
     <div>
         <div class="background-img">
-          <div class="search-input" >
-          <i class="fa fa-search" @click="search()"></i>
-          <input type="text" maxlength="46" v-model="keyword" placeholder="Search recipes"
-            @keyup="get_suggestion($event)" @keydown.enter="search()" @keydown.down="suggestion_down()" @keydown.up.prevent="suggestion_up()"
-            @focus="show_suggestion()" @blur="hide_suggestion()"
-          >
-          <span class="search-clear" @click="clear_input()">&times;</span>
-          <div class="search-select" v-if="suggestion_show_flag">
-            <transition-group name="itemfade" tag="ul" mode="out-in" v-cloak>
-              <li v-for="(value,index) in suggest_items" :class="{selectback:index==current_index}" class="search-select-option search-select-list"
-                @mouseover="suggestion_hover(index)" @click="suggestion_click(index)" :key="value">
-                {{value}}
-              </li>
-            </transition-group>
+          <div v-bind:class="header_show_flag?'fixed-search':'wrapper'">
+            <header class="top-header" v-if='header_show_flag'>
+            </header>
+
+            <div class="search-input">
+              <i class="fa fa-search" @click="search()"></i>
+              <input type="text" maxlength="46" v-model="keyword" placeholder="Search recipes"
+                @keyup="get_suggestion($event)" @keydown.enter="search()" @keydown.down="suggestion_down()" @keydown.up.prevent="suggestion_up()"
+                @focus="show_suggestion()" @blur="hide_suggestion()"
+              >
+              <span class="search-clear" @click="clear_input()">&times;</span>
+              <div class="search-select" v-if="suggestion_show_flag">
+                <transition-group name="itemfade" tag="ul" mode="out-in" v-cloak>
+                  <li v-for="(value,index) in suggest_items" :class="{selectback:index==current_index}" class="search-select-option search-select-list"
+                    @mouseover="suggestion_hover(index)" @click="suggestion_click(index)" :key="value">
+                    {{value}}
+                  </li>
+                </transition-group>
+              </div>
+            </div>
           </div>
-          </div>
-        </div>
+          <div class="main-content">
+            <el-row :gutter="20">
+              <el-col :span="6"><div class="grid-content bg-purple"></div>
+                  <el-container>
+                    <el-aside width="200px">Aside</el-aside>
+                    <el-container>
+                      <el-header>Header</el-header>
+                      <el-main>Main</el-main>
+                    </el-container>
+                  </el-container>
+              </el-col>
+              <el-col :span="6"><div class="grid-content bg-purple"></div>
+                <el-container>
+                    <el-aside width="200px">Aside</el-aside>
+                    <el-container>
+                      <el-header>Header</el-header>
+                      <el-main>Main</el-main>
+                    </el-container>
+                  </el-container>
+              </el-col>
+              <el-col :span="6"><div class="grid-content bg-purple"></div>
+                <el-container>
+                    <el-aside width="200px">Aside</el-aside>
+                    <el-container>
+                      <el-header>Header</el-header>
+                      <el-main>Main</el-main>
+                    </el-container>
+                  </el-container>
+              </el-col>
+              <el-col :span="6"><div class="grid-content bg-purple"></div>
+                <el-container>
+                    <el-aside width="200px">Aside</el-aside>
+                    <el-container>
+                      <el-header>Header</el-header>
+                      <el-main>Main</el-main>
+                    </el-container>
+                  </el-container>
+              </el-col>
+            </el-row>
+          </div>　<!-- main-content -->
+        </div> <!-- background-image -->
     </div>
 </template>
 
@@ -29,10 +74,55 @@ export default {
       keyword: '',
       suggest_items: [],
       current_index: -1,
-      suggestion_show_flag: true
+      suggestion_show_flag: true,
+      header_show_flag: false,
+      scroll_top: null
     }
   },
+  mounted () {
+    window.addEventListener('scroll', () => {
+      this.scroll_top = document.documentElement.scrollTop ||
+                        window.pageYOffset ||
+                        document.body.scrollTop
+      console.log(window.pageYOffset)
+      if (window.pageYOffset > 68) {
+        this.header_show_flag = true
+      } else {
+        this.header_show_flag = false
+      }
+    }, true)
+  },
   methods: {
+    scrollToTop () {
+      let $this = this
+      // 返回顶部动画特效
+      setTimeout(function animation () {
+        console.log('animation')
+        console.log('>0')
+        setTimeout(() => {
+          if ($this.scroll_top > 0) {
+            // 步进速度
+            $this.scroll_top -= 10
+
+            // 返回顶部
+            if (document.documentElement.scrollTop > 0) {
+              document.documentElement.scrollTop = $this.scroll_top - 10
+            } else if (window.pageYOffset > 0) {
+              window.pageYOffset = $this.scroll_top - 10
+            }
+            animation()
+          }
+        }, 3)
+      }, 3)
+    },
+    search_scroll: function (event) {
+      console.log('scroll')
+      if (window.scrollY > 50) {
+        this.header_show_flag = true
+      } else {
+        this.header_show_flag = false
+      }
+    },
     get_suggestion: function (event) {
       if (event.keyCode === 38 || event.keyCode === 40) { // ignore arrow up or down
         return
@@ -86,22 +176,56 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
+.top-header{
+  position: fixed;
+  top:0;
+  width: 100%;
+  height: 60px;
+  z-index: 999;
+  box-shadow: 0 4px 10px rgba(10, 10, 10, 0.3);
+  background: #fafafa;
+}
+
+.top-header .search-input{
+  background: white
+}
+
 .background-img{
-  width: 1920px;
+  width: 100%;
   height: 1200px;
+  position: relative;
   background: url('../assets/bg1.jpg') top no-repeat;
   background-size: auto;
 }
 
-.search-input {
+.wrapper .search-input {
   height: 45px;
   width: 600px;
   left: 0;
   right: 0;
   margin: 0 auto;
-  margin-top: 30px;
-  position: fixed;
+  margin-top: 80px;
+  position: absolute;
   display: flex;
+  z-index: 999;
+}
+
+.fixed-search .search-input{
+  position: fixed;
+  height: 45px;
+  width: 600px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  top:8px;
+  display: flex;
+  z-index: 999;
+}
+
+.fixed-search .search-input input{
+  width: 800px;
+  background: rgb(253, 253, 253);
+  border: 2px solid #e2e1e1;
 }
 
 .search-input input{
@@ -120,6 +244,7 @@ export default {
   padding-left: 10px;
   padding-right: 10px;
   overflow: auto;
+  transition: width 0.3s;
 }
 
 .search-input input:focus{
@@ -147,13 +272,13 @@ export default {
 .search-clear {
   width: 21px;
   height: 21px;
-  position: absolute;
+  position: relative;
   display: block;
   line-height: 21px;
   text-align: center;
   cursor: pointer;
   font-size: 20px;
-  right: 110px;
+  margin-left: -30px;
   top: 12px
 }
 
@@ -164,7 +289,7 @@ export default {
   top: 50px;
   left: -20px;
   box-sizing: border-box;
-  z-index: 10;
+  z-index: 999;
 }
 
 .search-select li{
@@ -207,4 +332,68 @@ export default {
 .itemfade-leave-active {
     position: absolute;
 }
+
+.main-content{
+  position: absolute;
+  margin-top: 250px;
+}
+
+.el-row {
+  margin-bottom: 20px;
+}
+.el-col {
+  border-radius: 4px;
+}
+.bg-purple-dark {
+  background: #99a9bf;
+}
+.bg-purple {
+  background: #d3dce6;
+}
+.bg-purple-light {
+  background: #e5e9f2;
+}
+.grid-content {
+  border-radius: 4px;
+  min-height: 36px;
+}
+.row-bg {
+  padding: 10px 0;
+  background-color: #f9fafc;
+}
+
+.el-header, .el-footer {
+  background-color: #B3C0D1;
+  color: #333;
+  text-align: center;
+  line-height: 60px;
+}
+
+.el-aside {
+  background-color: #D3DCE6;
+  color: #333;
+  text-align: center;
+  line-height: 200px;
+}
+
+.el-main {
+  background-color: #E9EEF3;
+  color: #333;
+  text-align: center;
+  line-height: 160px;
+}
+
+body > .el-container {
+  margin-bottom: 40px;
+}
+
+.el-container:nth-child(5) .el-aside,
+.el-container:nth-child(6) .el-aside {
+  line-height: 260px;
+}
+
+.el-container:nth-child(7) .el-aside {
+  line-height: 320px;
+}
+
 </style>
