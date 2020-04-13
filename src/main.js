@@ -6,6 +6,9 @@ import router from './router'
 import VueResource from 'vue-resource'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
+import jquery from 'jquery'
+global.jquery = global.$ = jquery
+
 Vue.use(ElementUI)
 Vue.use(VueResource)
 
