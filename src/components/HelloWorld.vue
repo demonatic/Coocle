@@ -1,10 +1,12 @@
 <template>
-    <div>
+    <div class="wrapper" overflow-y="scroll">
         <div class="background-img">
+          <el-button v-if='header_show_flag' class="go-top" @click="scroll_to_top" circle>
+            <i class="fa fa-angle-up"></i>
+          </el-button>
           <div v-bind:class="header_show_flag?'fixed-search':'float-search'">
             <header class="top-header" v-if='header_show_flag'>
             </header>
-
             <div class="search-input">
               <i class="fa fa-search" @click="search()"></i>
               <input type="text" maxlength="46" v-model="keyword" placeholder="Search recipes"
@@ -21,7 +23,7 @@
                 </transition-group>
               </div>
             </div>
-            <div class="search-description">
+            <div class="search-description" v-if='!header_show_flag'>
               <span>食谱／食材 &emsp;&emsp;&emsp;&emsp;中餐／西餐／面食／甜点／饮料</span>
             </div>
             <div class="navigator">
@@ -37,14 +39,19 @@
             <el-tab-pane label="收藏最多" name="second">收藏最多</el-tab-pane>
             <el-tab-pane label="做过最多" name="third">做过最多</el-tab-pane>
           </el-tabs>
-          <div class="infinite-list-wrapper" style="overflow:auto">
+          <div class="infinite-list-wrapper" style="overflow:hidden">
             <ul class="list" v-infinite-scroll="load" infinite-scroll-disabled="disabled">
               <li v-for="i in count" class="infinite-list-item" v-bind:key="i">
                 <el-row :gutter="20">
-                    <el-col :xs="12" :lg="8" :xl="6" v-for="i in col_count" v-bind:key="i">
+                    <el-col :xs="12" :lg="6" :xl="12" v-for="i in col_count" v-bind:key="i">
                         <el-container class="recipe-item">
                           <el-main>
-                            <el-image class="recipe-cover" :src="url"></el-image>
+                            <div class="effect-box">
+                              <el-image class="recipe-cover" :src="url"></el-image>
+                              <div class="border-line2">
+                                  <p> 西兰花, 鲜虾, 胡萝卜, 料酒,胡椒粉, 味极鲜酱油,盐, 油, 糖, 大蒜</p>
+                              </div>
+                            </div>
                           </el-main>
                           <el-header>
                             <span class="recipe-title">虾仁炒西兰花</span>
@@ -52,24 +59,21 @@
                           <el-footer class="recipe-ranks">
                             <div class="recipe-like">
                               <i class="fa fa-heart" aria-hidden="true"></i>
-                              <span>45</span>
+                              <span style="padding-left:5px">45</span>
                             </div>
                             <div class="recipe-rate">
                               <el-rate v-model="rate" disabled show-score score-template="{value}"
-                              text-color=#293F4F :colors="['#FFA56D', '#FF9627','#FD873F']" disabled-void-color='#DCDCDC'>
+                              text-color=#293F4F :colors="['#FFC833','#FFC833','#FFC833']" disabled-void-color='#DCDCDC'>
                               </el-rate>
                             </div>
                           </el-footer>
-                          <!-- <el-main class="recipe-ingredient">
-                            西兰花, 鲜虾, 胡萝卜, 料酒,胡椒粉, 味极鲜酱油,盐, 油, 糖, 大蒜
-                          </el-main> -->
                         </el-container>
                     </el-col>
                   </el-row>
               </li>
             </ul>
             <p v-if="loading">加载中...</p>
-            <p v-if="noMore">没有更多了</p>
+            <span class="main-footer">@demonatic&emsp;xdlc60@gmail.com &emsp;2020 &emsp;素材来自网络</span>
           </div>
         </div> <!-- main-content -->
     </div>
@@ -127,20 +131,20 @@ export default {
     handle_tab_click (tab, event) {
       console.log(tab, event)
     },
-    scrollToTop () {
+    scroll_to_top () {
       let $this = this
       // 返回顶部动画特效
       setTimeout(function animation () {
         setTimeout(() => {
           if ($this.scroll_top > 0) {
-            // 步进速度
-            $this.scroll_top -= 10
+            var speed = $this.scroll_top / 25 // 步进速度
+            $this.scroll_top -= (speed < 1.2 ? 1.2 : speed)
 
             // 返回顶部
             if (document.documentElement.scrollTop > 0) {
-              document.documentElement.scrollTop = $this.scroll_top - 10
+              document.documentElement.scrollTop = $this.scroll_top
             } else if (window.pageYOffset > 0) {
-              window.pageYOffset = $this.scroll_top - 10
+              window.pageYOffset = $this.scroll_top
             }
             animation()
           }
@@ -412,7 +416,7 @@ export default {
   box-shadow: 0 0px 15px rgba(10, 10, 10);
   background-color: #F5F5F5;
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: auto;   /*main content overflow */
 }
 
 .content-tab{
@@ -474,14 +478,32 @@ export default {
   width: 100%;
 }
 
-.recipe-ingredient {
-  color: #333333;
-  text-align: left;
-  font-weight: 500;
-  font-size: large;
-  width: 200px;
+.wrapper{
+  height: 100vh;
+  overflow-x: hidden;
 }
 
+.go-top{
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  width: 36px;
+  height: 36px;
+  z-index: 999;
+  box-shadow: 0 0 6px rgba(0,0,0, .12);
+}
+
+.go-top i{
+  font-size: x-large;
+  margin-left: -3px;
+  margin-top: -7px;
+  color: #1989fa;
+}
+
+.main-footer{
+  margin-left: -500px;
+  color: #acacac;
+}
 </style>
 
 <style>
@@ -509,7 +531,6 @@ export default {
 
 .main-content ul{
   list-style: none;
-  overflow: hidden;
 }
 
 .content-tab *{
@@ -553,4 +574,98 @@ export default {
 .el-tabs__item{
   color: #acacac;
 }
+
+.effect-box {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  font-size: x-large;
+  font-weight: 500;
+}
+
+.effect-box img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  -webkit-transition: opacity .5s;
+  transition: opacity .5s
+}
+
+.effect-box:hover img {
+  opacity: .4
+}
+
+.effect-box .border-line2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2em;
+  font-size: 1.25em;
+  color: #fff;
+  text-transform: uppercase;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden
+}
+
+.effect-box .border-line2::after,
+.effect-box .border-line2::before {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  bottom: 30px;
+  left: 30px;
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  -webkit-transition: opacity .35s, -webkit-transform .35s;
+  transition: opacity .35s, transform .35s
+}
+
+.effect-box .border-line2::before {
+  border-top: 1px solid #fff;
+  border-bottom: 1px solid #fff;
+  -webkit-transform: scale(0, 1);
+  transform: scale(0, 1)
+}
+
+.effect-box .border-line2::after {
+  border-right: 1px solid #fff;
+  border-left: 1px solid #fff;
+  -webkit-transform: scale(1, 0);
+  transform: scale(1, 0)
+}
+
+.effect-box:hover .border-line2::after,
+.effect-box:hover .border-line2::before {
+  opacity: 1;
+  -webkit-transform: scale(1);
+  transform: scale(1)
+}
+
+.effect-box .border-line2 p {
+  padding: 4px 10px;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.0;
+  text-align: center;
+  color: #fff;
+  letter-spacing: 1px;
+  opacity: 0;
+  -webkit-transition: opacity .35s, -webkit-transform .35s;
+  transition: opacity .35s, transform .35s;
+  -webkit-transform: translate3d(0, 20px, 0);
+  transform: translate3d(0, 20px, 0)
+}
+
+.effect-box:hover .border-line2 p {
+  opacity: 1;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0)
+}
+
 </style>
