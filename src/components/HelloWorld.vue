@@ -24,44 +24,58 @@
             <div class="search-description">
               <span>食谱／食材 &emsp;&emsp;&emsp;&emsp;中餐／西餐／面食／甜点／饮料</span>
             </div>
+            <div class="navigator">
+              <span>为你推荐</span>
+              <i class="fa fa-angle-double-down"></i>
+            </div>
           </div>
         </div> <!-- background-image -->
         <div class="main-content">
-          <div id="magazine">
-              <div class="recipe-page" v-for="(value,index) in pages" v-bind:key="index">
-                <ul>
-                  <li v-for="i in count" v-bind:key="i">
-                    <el-row :gutter="20">
-                      <el-col :xs="12" :lg="16" :xl="20">
-                        <el-container>
-                            <el-image class="recipe-cover" :src="url">
-                            </el-image>
-                            <el-container>
-                              <el-header>
-                                <span class="recipe-title">虾仁炒西兰花</span>
-                              </el-header>
-                              <hr class="recipe-title-split">
-                              <el-rate class="recipe-rate" v-model="rate" disabled show-score score-template="{value}"
-                                text-color=#B4181F :colors="['#FFA56D', '#FF9627','#FD873F']">
+          <el-tabs class="content-tab" v-model="active_tab_ame" @tab-click="handle_tab_click"
+          tab-position="top">
+            <el-tab-pane label="综合最佳" name="first">综合最佳</el-tab-pane>
+            <el-tab-pane label="收藏最多" name="second">收藏最多</el-tab-pane>
+            <el-tab-pane label="做过最多" name="third">做过最多</el-tab-pane>
+          </el-tabs>
+          <div class="infinite-list-wrapper" style="overflow:auto">
+            <ul class="list" v-infinite-scroll="load" infinite-scroll-disabled="disabled">
+              <li v-for="i in count" class="infinite-list-item" v-bind:key="i">
+                <el-row :gutter="20">
+                    <el-col :xs="12" :lg="8" :xl="6" v-for="i in col_count" v-bind:key="i">
+                        <el-container class="recipe-item">
+                          <el-main>
+                            <el-image class="recipe-cover" :src="url"></el-image>
+                          </el-main>
+                          <el-header>
+                            <span class="recipe-title">虾仁炒西兰花</span>
+                          </el-header>
+                          <el-footer class="recipe-ranks">
+                            <div class="recipe-like">
+                              <i class="fa fa-heart" aria-hidden="true"></i>
+                              <span>45</span>
+                            </div>
+                            <div class="recipe-rate">
+                              <el-rate v-model="rate" disabled show-score score-template="{value}"
+                              text-color=#293F4F :colors="['#FFA56D', '#FF9627','#FD873F']" disabled-void-color='#DCDCDC'>
                               </el-rate>
-                              <el-main class="recipe-ingredient">
-                                西兰花, 鲜虾, 胡萝卜, 料酒,胡椒粉, 味极鲜酱油,盐, 油, 糖, 大蒜
-                              </el-main>
-                            </el-container>
-                          </el-container>
-                      </el-col>
-                    </el-row>
-                  </li>
-                </ul>
-              </div>
-          </div> <!-- magazine -->
+                            </div>
+                          </el-footer>
+                          <!-- <el-main class="recipe-ingredient">
+                            西兰花, 鲜虾, 胡萝卜, 料酒,胡椒粉, 味极鲜酱油,盐, 油, 糖, 大蒜
+                          </el-main> -->
+                        </el-container>
+                    </el-col>
+                  </el-row>
+              </li>
+            </ul>
+            <p v-if="loading">加载中...</p>
+            <p v-if="noMore">没有更多了</p>
+          </div>
         </div> <!-- main-content -->
     </div>
 </template>
 
 <script>
-import $ from 'jquery'
-import 'turn.js'
 
 export default {
   name: 'HelloWorld',
@@ -74,15 +88,16 @@ export default {
       header_show_flag: false,
       scroll_top: null,
       count: 4,
+      col_count: 4,
       loading: false,
       url: 'https://cp1.douguo.com/upload/caiku/6/e/8/400x266_6e0988f8d514a6ce5d01f7afb3681aa8.jpeg',
       rate: 3.7,
-      pages: [1, 2, 3, 4, 5]
+      active_tab_ame: 'first'
     }
   },
   computed: {
     noMore () {
-      return this.count >= 4
+      return this.count >= 20
     },
     disabled () {
       return this.loading || this.noMore
@@ -90,13 +105,11 @@ export default {
   },
   mounted () {
     window.addEventListener('scroll', () => {
-      console.log('scroll')
       // document.documentElement.scrollTop += 2
       this.scroll_top = document.documentElement.scrollTop ||
                         window.pageYOffset ||
                         document.body.scrollTop
-      console.log(window.pageYOffset)
-      if (window.pageYOffset > 50) {
+      if (window.pageYOffset > 100) {
         this.header_show_flag = true
       } else {
         this.header_show_flag = false
@@ -110,6 +123,9 @@ export default {
         this.count += 2
         this.loading = false
       }, 2000)
+    },
+    handle_tab_click (tab, event) {
+      console.log(tab, event)
     },
     scrollToTop () {
       let $this = this
@@ -186,9 +202,7 @@ export default {
     }
   }
 }
-$(function () {
-  $('#magazine').turn({gradients: true, acceleration: true})
-})
+
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
@@ -197,9 +211,8 @@ $(function () {
 .background-img{
   width: 100%;
   height: 730px;
-  position: relative;
+  position: absolute;
   background: url('../assets/bg3.jpg') top no-repeat;
-  background-size: auto;
 }
 
 .background-img:after{
@@ -221,7 +234,7 @@ $(function () {
   width: 100%;
   height: 62px;
   z-index: 999;
-  box-shadow: 0 4px 10px rgba(10, 10, 10, 0.3);
+  box-shadow: 0 2px 6px rgba(10, 10, 10, 0.3);
   background: #fafafa;
 }
 
@@ -276,7 +289,7 @@ $(function () {
   padding-left: 10px;
   padding-right: 10px;
   overflow: auto;
-  transition: width 0.3s;
+  transition: width 0.5s;
 }
 
 .search-input input:focus{
@@ -374,92 +387,170 @@ $(function () {
   z-index: 10;
 }
 
+.navigator{
+  position: absolute;
+  left:0; right:0;
+  margin-left: -120px;
+  color: white;
+  margin-top:600px;
+  z-index: 10;
+}
+
+.navigator i{
+  margin-top: 10px;
+  font-size: 40px;
+  display:block;
+}
+
+.navigator span{
+  font-size: x-large;
+}
+
 .main-content{
-  position: relative;
-  margin-top: 0px;
-  box-shadow: 0 6px 12px rgba(10, 10, 10, 0.5);
+  position: absolute;
+  margin-top: 730px;
+  box-shadow: 0 0px 15px rgba(10, 10, 10);
+  background-color: #F5F5F5;
   width: 100%;
-  height: 1200px;
-  background: url(../assets/content-bg.jpg) no-repeat;
+  overflow-x: hidden;
 }
 
-#magazine{
+.content-tab{
+  font-size: 0px;
+  margin-left: 100px;
+  margin-top: 40px;
+  width: 360px;
+}
+
+.infinite-list-wrapper{
   position: relative;
-  width:1152px;
-  height:880px;
-}
-#magazine .turn-page{
-  background-color:#ccc;
-  background-size:100% 100%;
+  width: 100%;
+  margin-left: 12%;
 }
 
-.recipe-page{
-  border: 5px solid #003f5e;
-  background: url(../assets/book-bg.jpg);
+.recipe-item{
+  width: 300px;
+  background-color: white;
+  border-radius: 6px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 6px rgba(10, 10, 10, 0.1);
+}
+
+.recipe-ranks{
+  border-top: solid 1px rgb(158, 158, 158,0.2);
+}
+
+.recipe-like{
+  display: inline-block;
+  margin-top: 5px;
+  padding-right: 30px;
+}
+
+.recipe-like i{
+  color:#db466b;
+}
+
+.recipe-rate{
+  display: inline-block;
+  margin-top: 5px;
+  padding-left: 35px;
 }
 
 .recipe-cover{
-  border: 5px solid #003f5e;
-  width: 600px; height: 155px;
-  margin-top: 5px;
-  margin-bottom: 30px;
-}
-
-.recipe-title-split{
+  position: relative;
   display: block;
-  width: 90%;
-  margin-left: 20px;
-  margin-top: -10px;
-  size:3px;
+  width: 100%; height: 180px;
+  border-radius: 5px;
+  cursor:pointer;
 }
 
 .recipe-title{
   display: inline-block;
-  color: #013D5F;
+  color: #333333;
   font-weight: 500;
-  font-size:x-large;
+  font-size:large;
   text-align: left;
-  line-height: 60px;
+  line-height: 28px;
+  width: 100%;
 }
 
-.el-rate{
-  font-weight: 700;
-  margin-top: -3px;
-  margin-bottom: -10px;
-  margin-left: 12px;
+.recipe-ingredient {
+  color: #333333;
+  text-align: left;
+  font-weight: 500;
+  font-size: large;
+  width: 200px;
 }
 
-.el-aside {
-  background-color: white;
-  color: #333;
-  text-align: center;
-}
-
-.el-main {
-  color: #013D5F;
-  text-align: center;
-}
-
-body > .el-container {
-  margin-bottom: 40px;
-}
-
-.el-container:nth-child(5) .el-aside,
-.el-container:nth-child(6) .el-aside {
-  line-height: 260px;
-}
-
-.el-container:nth-child(7) .el-aside {
-  line-height: 320px;
-}
 </style>
 
 <style>
-.el-rate i{
-  font-size: 22px !important;
+
+.el-container{
+  margin-bottom: 40px !important;
 }
 
-.recipe-page ul{
+.el-col{
+  width: 300px;
+  margin-right: 40px;
+}
+
+.el-rate{
+  display: inline-block;
+}
+
+.el-rate i{
+  font-size: 21px;
+}
+
+.el-rate span{
+  font-size:medium;
+}
+
+.main-content ul{
   list-style: none;
+  overflow: hidden;
+}
+
+.content-tab *{
+  color: #3b3b3b;
+  font-size: large;
+}
+
+.el-main{
+  padding:10px;
+}
+
+.el-header{
+  height: 36px !important;
+}
+
+.el-footer{
+  height: 30px !important;
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.el-tabs__content{
+  height: 0px;
+}
+.el-tabs__active-bar{
+  background-color: #eb3c68;
+  height: 3px;
+}
+
+.el-tabs__nav-wrap:after{
+  background-color: #F5F5F5;
+}
+
+.el-tabs__item:hover{
+  color: #ffd342;
+}
+
+.el-tabs__item.is-active{
+  color: #333333;
+}
+.el-tabs__item{
+  color: #acacac;
 }
 </style>
