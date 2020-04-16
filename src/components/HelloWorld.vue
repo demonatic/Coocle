@@ -6,6 +6,14 @@
           </el-button>
           <div v-bind:class="header_show_flag?'fixed-search':'float-search'">
             <header class="top-header" v-if='header_show_flag'>
+              <div class="header-menu" id="find-menu">
+                <i class="fa fa-th"></i>
+                <span>发现</span>
+              </div>
+              <div class="header-menu" id="search-menu">
+                <i class="fa fa-dot-circle-o"></i>
+                <span>搜索</span>
+              </div>
             </header>
             <div class="search-input">
               <i class="fa fa-search" @click="search()"></i>
@@ -23,7 +31,7 @@
                 </transition-group>
               </div>
             </div>
-            <div class="search-description" v-if='!header_show_flag'>
+            <div class="search-description">
               <span>食谱／食材 &emsp;&emsp;&emsp;&emsp;中餐／西餐／面食／甜点／饮料</span>
             </div>
             <div class="navigator">
@@ -240,6 +248,21 @@ export default {
   z-index: 999;
   box-shadow: 0 2px 6px rgba(10, 10, 10, 0.3);
   background: #fafafa;
+}
+
+.header-menu{
+  position: fixed;
+  margin-top: 21px;
+  font-size: large;
+  cursor: pointer;
+}
+
+#find-menu{
+  left: 21%;
+}
+
+#search-menu{
+  left: 27%;
 }
 
 .top-header .search-input{
@@ -668,4 +691,22 @@ export default {
   transform: translate3d(0, 0, 0)
 }
 
+.header-menu::after {
+position: absolute;
+bottom: -17px;
+left: 0;
+width: 100%;
+height: 4px;
+background-color: #00aeff;
+content: '';
+-webkit-transform: scaleX(0);
+transform: scaleX(0);
+-webkit-transition: ease-in-out 0.2s;
+transition: ease-in-out 0.2s;
+}
+
+.header-menu:hover::after {
+-webkit-transform: scaleX(1);
+transform: scaleX(1);
+}
 </style>
