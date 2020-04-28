@@ -47,50 +47,73 @@
             <el-tab-pane label="收藏最多" name="second">收藏最多</el-tab-pane>
             <el-tab-pane label="做过最多" name="third">做过最多</el-tab-pane>
           </el-tabs>
-          <div class="infinite-list-wrapper" style="overflow:hidden">
-            <ul class="list" v-infinite-scroll="load" infinite-scroll-disabled="disabled">
-              <li v-for="i in count" class="infinite-list-item" v-bind:key="i">
-                <el-row :gutter="20">
-                    <el-col :xs="12" :lg="6" :xl="12" v-for="i in col_count" v-bind:key="i">
-                        <el-container class="recipe-item">
-                          <el-main>
-                            <div class="effect-box">
-                              <el-image class="recipe-cover" :src="url"></el-image>
-                              <div class="border-line2">
-                                  <p> 西兰花, 鲜虾, 胡萝卜, 料酒,胡椒粉, 味极鲜酱油,盐, 油, 糖, 大蒜</p>
-                              </div>
-                            </div>
-                          </el-main>
-                          <el-header>
-                            <span class="recipe-title">虾仁炒西兰花</span>
-                          </el-header>
-                          <el-footer class="recipe-ranks">
-                            <div class="recipe-like">
-                              <i class="fa fa-heart" aria-hidden="true"></i>
-                              <span style="padding-left:5px">45</span>
-                            </div>
-                            <div class="recipe-rate">
-                              <el-rate v-model="rate" disabled show-score score-template="{value}"
-                              text-color=#293F4F :colors="['#FFC833','#FFC833','#FFC833']" disabled-void-color='#DCDCDC'>
-                              </el-rate>
-                            </div>
-                          </el-footer>
-                        </el-container>
-                    </el-col>
-                  </el-row>
-              </li>
-            </ul>
-            <p v-if="loading">加载中...</p>
-            <span class="main-footer">@demonatic&emsp;xdlc60@gmail.com &emsp;2020 &emsp;素材来自网络</span>
-          </div>
+         <grid-layout
+            id="recipe-grid"
+            :layout.sync="layout"
+            :col-num="10"
+            :is-draggable="true"
+            :is-resizable="false"
+            :is-mirrored="false"
+            :vertical-compact="false"
+            :margin="[10, 0]"
+            :use-css-transforms="true"
+            :preventCollision="true"
+            :responsive="true"
+          >
+            <grid-item v-for="item in layout" :key="item.i"
+              :x="item.x" :y="item.y" :w="item.w" :h="item.h" :i="item.i"
+            >
+              <el-container class="recipe-item">
+                <el-main>
+                  <div class="effect-box">
+                    <el-image class="recipe-cover" :src="item.info.cover_img"></el-image>
+                    <div class="border-line2">
+                        <p>{{item.info.ingredient_str}}</p>
+                    </div>
+                  </div>
+                </el-main>
+                <el-header>
+                  <span class="recipe-title">{{item.info.recipe_name}}</span>
+                </el-header>
+                <el-footer class="recipe-ranks">
+                  <div class="recipe-like">
+                    <i class="fa fa-heart" aria-hidden="true"></i>
+                    <span style="padding-left:5px">{{item.info.favourite}}</span>
+                  </div>
+                  <div class="recipe-rate">
+                    <el-rate v-model="item.info.rate" disabled show-score score-template="{value}"
+                    text-color=#293F4F :colors="['#F4E04D','#F4E04D','#F4E04D']" disabled-void-color='#DCDCDC'>
+                    </el-rate>
+                  </div>
+                </el-footer>
+              </el-container>
+              <!-- {{item.i}} -->
+            </grid-item>
+          </grid-layout>
         </div> <!-- main-content -->
     </div>
 </template>
 
 <script>
+import VueGridLayout from 'vue-grid-layout'
+var recipeLayout = [
+  // {'x': 0, 'y': 0, 'w': 2, 'h': 2, 'i': '0'},
+  // {'x': 2, 'y': 0, 'w': 2, 'h': 2, 'i': '1'},
+  // {'x': 4, 'y': 0, 'w': 2, 'h': 2, 'i': '2'},
+  // {'x': 6, 'y': 0, 'w': 2, 'h': 2, 'i': '3'},
+  // {'x': 0, 'y': 2, 'w': 2, 'h': 2, 'i': '4'},
+  // {'x': 2, 'y': 2, 'w': 2, 'h': 2, 'i': '5'},
+  // {'x': 4, 'y': 2, 'w': 2, 'h': 2, 'i': '6'},
+  // {'x': 6, 'y': 2, 'w': 2, 'h': 2, 'i': '7'},
+  // {'x': 0, 'y': 4, 'w': 2, 'h': 2, 'i': '8'}
+]
 
 export default {
-  name: 'HelloWorld',
+  name: 'Home',
+  components: {
+    GridLayout: VueGridLayout.GridLayout,
+    GridItem: VueGridLayout.GridItem
+  },
   data () {
     return {
       keyword: '',
@@ -99,20 +122,9 @@ export default {
       suggestion_show_flag: true,
       header_show_flag: false,
       scroll_top: null,
-      count: 4,
-      col_count: 4,
       loading: false,
-      url: 'https://cp1.douguo.com/upload/caiku/6/e/8/400x266_6e0988f8d514a6ce5d01f7afb3681aa8.jpeg',
-      rate: 3.7,
-      active_tab_ame: 'first'
-    }
-  },
-  computed: {
-    noMore () {
-      return this.count >= 20
-    },
-    disabled () {
-      return this.loading || this.noMore
+      active_tab_ame: 'first',
+      layout: []
     }
   },
   mounted () {
@@ -128,14 +140,10 @@ export default {
       }
     }, true)
   },
+  http: {
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+  },
   methods: {
-    load () {
-      this.loading = true
-      setTimeout(() => {
-        this.count += 2
-        this.loading = false
-      }, 2000)
-    },
     handle_tab_click (tab, event) {
       console.log(tab, event)
     },
@@ -177,7 +185,37 @@ export default {
       })
     },
     search: function () {
-      console.log('call search', this.keyword)
+      var searchContent = `{"query": "${this.keyword}","query by": ["recipe_name","context"]}`
+      console.log(searchContent)
+      this.$http.post('http://localhost:8888/collections/recipe/documents-search', searchContent).then(function (res) {
+        recipeLayout = []
+        let hits = res.body.hits
+        for (let i = 0; i < hits.length; i++) {
+          let hit = hits[i]
+          let ingredientStr = ''
+          for (let j = 0; j < hit.ingredients.length; j++) {
+            if (ingredientStr.length !== 0) {
+              ingredientStr += ', '
+            }
+            ingredientStr += hit.ingredients[j].title
+          }
+          hit['ingredient_str'] = ingredientStr
+        }
+        let index
+        for (index in hits) {
+          console.log(hits[index])
+          let len = recipeLayout.length
+          recipeLayout.push({
+            'x': 2 * (len % 4),
+            'y': 2 * (len / 4),
+            'w': 2,
+            'h': 2,
+            'i': recipeLayout.length,
+            'info': hits[index]
+          })
+        }
+        this.layout = recipeLayout
+      })
     },
     clear_input: function () {
       this.keyword = ''
@@ -449,10 +487,11 @@ export default {
   width: 360px;
 }
 
-.infinite-list-wrapper{
+#recipe-grid{
   position: relative;
   width: 100%;
   margin-left: 12%;
+  overflow: hidden;
 }
 
 .recipe-item{
@@ -474,7 +513,7 @@ export default {
 }
 
 .recipe-like i{
-  color:#db466b;
+  color:#D8345F;
 }
 
 .recipe-rate{
@@ -691,22 +730,22 @@ export default {
   transform: translate3d(0, 0, 0)
 }
 
-.header-menu::after {
-position: absolute;
-bottom: -17px;
-left: 0;
-width: 100%;
-height: 4px;
-background-color: #00aeff;
-content: '';
--webkit-transform: scaleX(0);
-transform: scaleX(0);
--webkit-transition: ease-in-out 0.2s;
-transition: ease-in-out 0.2s;
+.header-menu::after{
+  position: absolute;
+  bottom: -17px;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: #00aeff;
+  content: '';
+  -webkit-transform: scaleX(0);
+  transform: scaleX(0);
+  -webkit-transition: ease-in-out 0.2s;
+  transition: ease-in-out 0.2s;
 }
 
 .header-menu:hover::after {
--webkit-transform: scaleX(1);
-transform: scaleX(1);
+  -webkit-transform: scaleX(1);
+  transform: scaleX(1);
 }
 </style>
