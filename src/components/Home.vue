@@ -50,18 +50,17 @@
          <grid-layout
             id="recipe-grid"
             :layout.sync="layout"
-            :col-num="10"
+            :col-num="12"
             :is-draggable="true"
             :is-resizable="false"
             :is-mirrored="false"
-            :vertical-compact="false"
-            :margin="[10, 0]"
-            :use-css-transforms="true"
+            :vertical-compact="true"
+            :use-css-transforms="false"
             :preventCollision="true"
             :responsive="true"
           >
             <grid-item v-for="item in layout" :key="item.i"
-              :x="item.x" :y="item.y" :w="item.w" :h="item.h" :i="item.i"
+              :x.sync="item.x" :y.sync="item.y" :w.sync="item.w" :h.sync="item.h" :i="item.i"
             >
               <el-container class="recipe-item">
                 <el-main>
@@ -96,17 +95,7 @@
 
 <script>
 import VueGridLayout from 'vue-grid-layout'
-var recipeLayout = [
-  // {'x': 0, 'y': 0, 'w': 2, 'h': 2, 'i': '0'},
-  // {'x': 2, 'y': 0, 'w': 2, 'h': 2, 'i': '1'},
-  // {'x': 4, 'y': 0, 'w': 2, 'h': 2, 'i': '2'},
-  // {'x': 6, 'y': 0, 'w': 2, 'h': 2, 'i': '3'},
-  // {'x': 0, 'y': 2, 'w': 2, 'h': 2, 'i': '4'},
-  // {'x': 2, 'y': 2, 'w': 2, 'h': 2, 'i': '5'},
-  // {'x': 4, 'y': 2, 'w': 2, 'h': 2, 'i': '6'},
-  // {'x': 6, 'y': 2, 'w': 2, 'h': 2, 'i': '7'},
-  // {'x': 0, 'y': 4, 'w': 2, 'h': 2, 'i': '8'}
-]
+var recipeLayout = []
 
 export default {
   name: 'Home',
@@ -122,9 +111,8 @@ export default {
       suggestion_show_flag: true,
       header_show_flag: false,
       scroll_top: null,
-      loading: false,
       active_tab_ame: 'first',
-      layout: []
+      layout: recipeLayout
     }
   },
   mounted () {
@@ -198,16 +186,20 @@ export default {
               ingredientStr += ', '
             }
             ingredientStr += hit.ingredients[j].title
+            if (ingredientStr.length > 36) {
+              ingredientStr += '...'
+              break
+            }
           }
           hit['ingredient_str'] = ingredientStr
         }
         let index
         for (index in hits) {
-          console.log(hits[index])
           let len = recipeLayout.length
+          console.log('x', 2 * (len % 4), 'y', 2 * (len / 4))
           recipeLayout.push({
-            'x': 2 * (len % 4),
-            'y': 2 * (len / 4),
+            'x': 2 * (len % 4) + 0.3 * (len % 4),
+            'y': 2 * parseInt(len / 4),
             'w': 2,
             'h': 2,
             'i': recipeLayout.length,
@@ -215,6 +207,7 @@ export default {
           })
         }
         this.layout = recipeLayout
+        // console.log(this.layout)
       })
     },
     clear_input: function () {
@@ -261,7 +254,7 @@ export default {
 .background-img{
   width: 100%;
   height: 730px;
-  position: absolute;
+  position: relative;
   background: url('../assets/bg3.jpg') top no-repeat;
 }
 
@@ -472,12 +465,13 @@ export default {
 }
 
 .main-content{
-  position: absolute;
-  margin-top: 730px;
+  position: relative;
   box-shadow: 0 0px 15px rgba(10, 10, 10);
   background-color: #F5F5F5;
   width: 100%;
-  overflow-x: auto;   /*main content overflow */
+  height: 100%;
+  overflow-x: hidden;   /*main content overflow */
+  overflow-y: hidden;
 }
 
 .content-tab{
@@ -498,8 +492,7 @@ export default {
   width: 300px;
   background-color: white;
   border-radius: 6px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 6px rgba(10, 10, 10, 0.1);
+  box-shadow: 0 2px 6px rgba(10, 10, 10, 0.15);
 }
 
 .recipe-ranks{
@@ -533,6 +526,7 @@ export default {
 .recipe-title{
   display: inline-block;
   color: #333333;
+  padding-bottom: 5px;
   font-weight: 500;
   font-size:large;
   text-align: left;
@@ -541,7 +535,6 @@ export default {
 }
 
 .wrapper{
-  height: 100vh;
   overflow-x: hidden;
 }
 
@@ -570,8 +563,15 @@ export default {
 
 <style>
 
+.columns {
+  /* -moz-columns: 120px;
+  -webkit-columns: 120px; */
+  columns: 300px;
+}
+
 .el-container{
   margin-bottom: 40px !important;
+  margin: 0px !important;
 }
 
 .el-col{
@@ -605,7 +605,9 @@ export default {
 }
 
 .el-header{
-  height: 36px !important;
+  height: fit-content !important;
+  height:-webkit-fit-content !important;
+  height:-moz-fit-content !important;
 }
 
 .el-footer{
@@ -671,7 +673,7 @@ export default {
   color: #fff;
   text-transform: uppercase;
   -webkit-backface-visibility: hidden;
-  backface-visibility: hidden
+  backface-visibility: hidden;
 }
 
 .effect-box .border-line2::after,
@@ -748,4 +750,5 @@ export default {
   -webkit-transform: scaleX(1);
   transform: scaleX(1);
 }
+
 </style>
