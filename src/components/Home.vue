@@ -6,19 +6,25 @@
           </el-button>
           <div v-bind:class="header_show_flag?'fixed-search':'float-search'">
             <header class="top-header" v-if='header_show_flag'>
-              <div class="header-menu" id="find-menu">
+              <div class="header-menu" id="find-menu" @click="do_recommendation()">
                 <i class="fa fa-th"></i>
                 <span>发现</span>
+                <transition name='underline-fade'>
+                  <div v-if='find_search_toggle' class='underline'></div>
+                </transition>
               </div>
-              <div class="header-menu" id="search-menu">
+              <div class="header-menu" id="search-menu" @click="do_search()">
                 <i class="fa fa-dot-circle-o"></i>
                 <span>搜索</span>
+                <transition name='underline-fade'>
+                  <div v-if='!find_search_toggle' class='underline'></div>
+                </transition>
               </div>
             </header>
             <div class="search-input">
-              <i class="fa fa-search" @click="search()"></i>
+              <i class="fa fa-search" @click="do_search()"></i>
               <input type="text" maxlength="46" v-model="keyword" placeholder="Search recipes"
-                @keyup="get_suggestion($event)" @keydown.enter="search()" @keydown.down="suggestion_down()" @keydown.up.prevent="suggestion_up()"
+                @keyup="get_suggestion($event)" @keydown.enter="do_search()" @keydown.down="suggestion_down()" @keydown.up.prevent="suggestion_up()"
                 @focus="show_suggestion()" @blur="hide_suggestion()"
               >
               <span class="search-clear" @click="clear_input()">&times;</span>
@@ -34,8 +40,9 @@
             <div class="search-description">
               <span>食谱／食材 &emsp;&emsp;&emsp;&emsp;中餐／西餐／面食／甜点／饮料</span>
             </div>
-            <div class="navigator">
-              <span>为你推荐</span>
+            <div class="navigator" @click="scroll_to_search_result()">
+              <span v-if="find_search_toggle">为你推荐</span>
+              <span v-if="!find_search_toggle">'{{keyword}}' &nbsp;的搜索结果</span>
               <i class="fa fa-angle-double-down"></i>
             </div>
           </div>
@@ -51,7 +58,7 @@
             id="recipe-grid"
             :layout.sync="layout"
             :col-num="12"
-            :is-draggable="true"
+            :is-draggable="false"
             :is-resizable="false"
             :is-mirrored="false"
             :vertical-compact="true"
@@ -76,7 +83,7 @@
                 </el-header>
                 <el-footer class="recipe-ranks">
                   <div class="recipe-like">
-                    <i class="fa fa-heart" aria-hidden="true"></i>
+                    <i class="fa fa-heart"></i>
                     <span style="padding-left:5px">{{item.info.favourite}}</span>
                   </div>
                   <div class="recipe-rate">
@@ -86,7 +93,6 @@
                   </div>
                 </el-footer>
               </el-container>
-              <!-- {{item.i}} -->
             </grid-item>
           </grid-layout>
         </div> <!-- main-content -->
@@ -112,16 +118,16 @@ export default {
       header_show_flag: false,
       scroll_top: null,
       active_tab_ame: 'first',
-      layout: recipeLayout
+      layout: recipeLayout,
+      find_search_toggle: true
     }
   },
   mounted () {
     window.addEventListener('scroll', () => {
-      // document.documentElement.scrollTop += 2
       this.scroll_top = document.documentElement.scrollTop ||
                         window.pageYOffset ||
                         document.body.scrollTop
-      if (window.pageYOffset > 100) {
+      if (window.pageYOffset > 110) {
         this.header_show_flag = true
       } else {
         this.header_show_flag = false
@@ -143,7 +149,6 @@ export default {
           if ($this.scroll_top > 0) {
             var speed = $this.scroll_top / 25 // 步进速度
             $this.scroll_top -= (speed < 1.2 ? 1.2 : speed)
-
             // 返回顶部
             if (document.documentElement.scrollTop > 0) {
               document.documentElement.scrollTop = $this.scroll_top
@@ -155,12 +160,25 @@ export default {
         }, 3)
       }, 3)
     },
-    search_scroll: function (event) {
-      if (window.scrollY > 50) {
-        this.header_show_flag = true
-      } else {
-        this.header_show_flag = false
-      }
+    scroll_to_search_result () {
+      let $this = this
+      // 返回顶部动画特效
+      setTimeout(function animation () {
+        setTimeout(() => {
+          let targetY = 680
+          if ($this.scroll_top < targetY) {
+            let speed = (targetY - $this.scroll_top) / 7 // 步进速度
+            $this.scroll_top += (speed < 2.8 ? 2.8 : speed)
+            // 返回顶部
+            if (document.documentElement.scrollTop >= 0) {
+              document.documentElement.scrollTop = $this.scroll_top
+            } else if (window.pageYOffset >= 0) {
+              window.pageYOffset = $this.scroll_top
+            }
+            animation()
+          }
+        }, 3)
+      }, 3)
     },
     get_suggestion: function (event) {
       if (event.keyCode === 38 || event.keyCode === 40) { // ignore arrow up or down
@@ -172,7 +190,7 @@ export default {
         this.suggest_items = res.data.s
       })
     },
-    search: function () {
+    do_search: function () {
       var searchContent = `{"query": "${this.keyword}","query by": ["recipe_name","context"]}`
       console.log(searchContent)
       this.$http.post('http://localhost:8888/collections/recipe/documents-search', searchContent).then(function (res) {
@@ -198,7 +216,7 @@ export default {
           let len = recipeLayout.length
           console.log('x', 2 * (len % 4), 'y', 2 * (len / 4))
           recipeLayout.push({
-            'x': 2 * (len % 4) + 0.3 * (len % 4),
+            'x': 2 * (len % 4) + 0.4 * (len % 4),
             'y': 2 * parseInt(len / 4),
             'w': 2,
             'h': 2,
@@ -206,6 +224,7 @@ export default {
             'info': hits[index]
           })
         }
+        this.find_search_toggle = false
         this.layout = recipeLayout
         // console.log(this.layout)
       })
@@ -219,7 +238,7 @@ export default {
     },
     suggestion_click: function (index) {
       this.keyword = this.suggest_items[index]
-      this.search()
+      this.do_search()
     },
     suggestion_up: function () {
       this.current_index--
@@ -242,6 +261,9 @@ export default {
     },
     show_suggestion: function () {
       this.suggestion_show_flag = true
+    },
+    do_recommendation: function () {
+      this.find_search_toggle = true
     }
   }
 }
@@ -283,9 +305,13 @@ export default {
 
 .header-menu{
   position: fixed;
-  margin-top: 21px;
+  margin-top: 22px;
   font-size: large;
   cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 #find-menu{
@@ -452,6 +478,11 @@ export default {
   color: white;
   margin-top:600px;
   z-index: 10;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: pointer;
 }
 
 .navigator i{
@@ -500,9 +531,10 @@ export default {
 }
 
 .recipe-like{
-  display: inline-block;
+  position: relative;
+  float: left;
   margin-top: 5px;
-  padding-right: 30px;
+  margin-left: 18px;
 }
 
 .recipe-like i{
@@ -510,15 +542,15 @@ export default {
 }
 
 .recipe-rate{
-  display: inline-block;
+  float: right;
   margin-top: 5px;
-  padding-left: 35px;
+  margin-right: 15px;
 }
 
 .recipe-cover{
   position: relative;
   display: block;
-  width: 100%; height: 180px;
+  width: 280px; height: 180px;
   border-radius: 5px;
   cursor:pointer;
 }
@@ -732,23 +764,22 @@ export default {
   transform: translate3d(0, 0, 0)
 }
 
-.header-menu::after{
+.header-menu .underline{
   position: absolute;
-  bottom: -17px;
+  bottom: -16px;
   left: 0;
   width: 100%;
   height: 4px;
   background-color: #00aeff;
-  content: '';
-  -webkit-transform: scaleX(0);
-  transform: scaleX(0);
-  -webkit-transition: ease-in-out 0.2s;
-  transition: ease-in-out 0.2s;
 }
 
-.header-menu:hover::after {
-  -webkit-transform: scaleX(1);
-  transform: scaleX(1);
+.underline-fade-enter-active, .underline-fade-leave-active{
+  -webkit-transition: ease-in-out .2s;
+  transition: ease-in-out .2s;
+}
+
+.underline-fade-enter, .underline-fade-leave-to{
+  transform: scaleX(0);
 }
 
 </style>
