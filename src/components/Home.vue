@@ -185,15 +185,16 @@ export default {
         return
       }
       console.log('call auto suggest')
-      this.$http.jsonp('https://sug.so.360.cn/suggest?word=' + this.keyword + '&encodein=utf-8&encodeout=utf-8').then(function (res) {
-        // console.log(res.data.s)
-        this.suggest_items = res.data.s
+      let uriEncoded = encodeURI('http://localhost:7777/collections/recipe/auto_suggestion?q=' + this.keyword)
+      this.$http.get(uriEncoded).then(function (res) {
+        console.log(res.body.suggestions)
+        this.suggest_items = res.body.suggestions
       })
     },
     do_search: function () {
       var searchContent = `{"query": "${this.keyword}","query by": ["recipe_name","context"]}`
       console.log(searchContent)
-      this.$http.post('http://localhost:8888/collections/recipe/documents-search', searchContent).then(function (res) {
+      this.$http.post('http://localhost:7777/collections/recipe/documents', searchContent).then(function (res) {
         recipeLayout = []
         let hits = res.body.hits
         for (let i = 0; i < hits.length; i++) {
