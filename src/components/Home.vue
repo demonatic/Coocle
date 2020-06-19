@@ -42,8 +42,9 @@
             </div>
             <div class="navigator" @click="scroll_to_search_result()">
               <span v-if="find_search_toggle">为你推荐</span>
-              <span v-if="!find_search_toggle">'{{keyword}}' &nbsp;的搜索结果</span>
-              <i class="fa fa-angle-double-down"></i>
+              <span v-if="!find_search_toggle">'{{searched_keyword}}' &nbsp;的搜索结果</span>
+              <i v-if="!is_loading" class="el-icon-d-arrow-right" style="transform: rotate(90deg); font-size: xx-large"></i>
+              <i v-if="is_loading" class="el-icon-loading" style="font-size: xx-large"></i>
             </div>
           </div>
         </div> <!-- background-image -->
@@ -112,6 +113,8 @@ export default {
   data () {
     return {
       keyword: '',
+      searched_keyword: '',
+      is_loading: false,
       suggest_items: [],
       current_index: -1,
       suggestion_show_flag: true,
@@ -185,16 +188,18 @@ export default {
         return
       }
       console.log('call auto suggest')
-      let uriEncoded = encodeURI('http://localhost:7777/collections/recipe/auto_suggestion?q=' + this.keyword)
+      let uriEncoded = encodeURI('http://47.98.241.147:7777/collections/recipe/auto_suggestion?q=' + this.keyword)
       this.$http.get(uriEncoded).then(function (res) {
         console.log(res.body.suggestions)
         this.suggest_items = res.body.suggestions
       })
     },
     do_search: function () {
-      var searchContent = `{"query": "${this.keyword}","query by": ["recipe_name","context"]}`
+      this.is_loading = true
+      this.searched_keyword = this.keyword
+      var searchContent = `{"query": "${this.keyword}","query by": ["recipe_name","ingredients.$items.title","context"],"boost": [5,2.5,1]}`
       console.log(searchContent)
-      this.$http.post('http://localhost:7777/collections/recipe/documents', searchContent).then(function (res) {
+      this.$http.post('http://47.98.241.147:7777/collections/recipe/documents', searchContent).then(function (res) {
         recipeLayout = []
         let hits = res.body.hits
         for (let i = 0; i < hits.length; i++) {
@@ -227,6 +232,7 @@ export default {
         }
         this.find_search_toggle = false
         this.layout = recipeLayout
+        this.is_loading = false
         // console.log(this.layout)
       })
     },
