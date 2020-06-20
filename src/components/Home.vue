@@ -1,5 +1,5 @@
 <template>
-    <div class="wrapper" overflow-y="scroll">
+    <div class="wrapper">
         <div class="background-img">
           <el-button v-if='header_show_flag' class="go-top" @click="scroll_to_top" circle>
             <i class="fa fa-angle-up"></i>
@@ -10,14 +10,14 @@
                 <i class="fa fa-th"></i>
                 <span>发现</span>
                 <transition name='underline-fade'>
-                  <div v-if='find_search_toggle' class='underline'></div>
+                  <div v-if='recommend_search_toggle' class='underline'></div>
                 </transition>
               </div>
               <div class="header-menu" id="search-menu" @click="do_search()">
                 <i class="fa fa-dot-circle-o"></i>
                 <span>搜索</span>
                 <transition name='underline-fade'>
-                  <div v-if='!find_search_toggle' class='underline'></div>
+                  <div v-if='!recommend_search_toggle' class='underline'></div>
                 </transition>
               </div>
             </header>
@@ -41,21 +41,23 @@
               <span>食谱／食材 &emsp;&emsp;&emsp;&emsp;中餐／西餐／面食／甜点／饮料</span>
             </div>
             <div class="navigator" @click="scroll_to_search_result()">
-              <span v-if="find_search_toggle">为你推荐</span>
-              <span v-if="!find_search_toggle">'{{searched_keyword}}' &nbsp;的搜索结果</span>
+              <span v-if="recommend_search_toggle">为你推荐</span>
+              <span v-if="!recommend_search_toggle">'{{searched_keyword}}' &nbsp;的搜索结果</span>
               <i v-if="!is_loading" class="el-icon-d-arrow-right" style="transform: rotate(90deg); font-size: xx-large"></i>
               <i v-if="is_loading" class="el-icon-loading" style="font-size: xx-large"></i>
             </div>
           </div>
         </div> <!-- background-image -->
         <div class="main-content">
-          <el-tabs class="content-tab" v-model="active_tab_ame" @tab-click="handle_tab_click"
+          <el-tabs v-if="!is_loading" class="content-tab" v-model="active_tab_ame" @tab-click="handle_tab_click"
           tab-position="top">
-            <el-tab-pane label="综合最佳" name="first">综合最佳</el-tab-pane>
-            <el-tab-pane label="收藏最多" name="second">收藏最多</el-tab-pane>
-            <el-tab-pane label="做过最多" name="third">做过最多</el-tab-pane>
+            <el-tab-pane v-if="recommend_search_toggle" label="推荐食谱" name="first">推荐食谱</el-tab-pane>
+            <el-tab-pane v-if="!recommend_search_toggle" label="综合最佳" name="first">综合最佳</el-tab-pane>
+            <el-tab-pane v-if="!recommend_search_toggle" label="收藏最多" name="second">收藏最多</el-tab-pane>
+            <el-tab-pane v-if="!recommend_search_toggle" label="做过最多" name="third">做过最多</el-tab-pane>
           </el-tabs>
-         <grid-layout
+          <div v-if="is_loading" class="content-loading-icon"></div>
+         <grid-layout v-if="!is_loading"
             id="recipe-grid"
             :layout.sync="layout"
             :col-num="12"
@@ -122,7 +124,7 @@ export default {
       scroll_top: null,
       active_tab_ame: 'first',
       layout: recipeLayout,
-      find_search_toggle: true
+      recommend_search_toggle: true
     }
   },
   mounted () {
@@ -196,6 +198,7 @@ export default {
     },
     do_search: function () {
       this.is_loading = true
+      this.recipeLayout = []
       this.searched_keyword = this.keyword
       var searchContent = `{"query": "${this.keyword}","query by": ["recipe_name","ingredients.$items.title","context"],"boost": [5,2.5,1]}`
       console.log(searchContent)
@@ -210,7 +213,7 @@ export default {
               ingredientStr += ', '
             }
             ingredientStr += hit.ingredients[j].title
-            if (ingredientStr.length > 36) {
+            if (ingredientStr.length > 32) {
               ingredientStr += '...'
               break
             }
@@ -230,7 +233,7 @@ export default {
             'info': hits[index]
           })
         }
-        this.find_search_toggle = false
+        this.recommend_search_toggle = false
         this.layout = recipeLayout
         this.is_loading = false
         // console.log(this.layout)
@@ -270,7 +273,7 @@ export default {
       this.suggestion_show_flag = true
     },
     do_recommendation: function () {
-      this.find_search_toggle = true
+      this.recommend_search_toggle = true
     }
   }
 }
@@ -508,6 +511,7 @@ export default {
   background-color: #F5F5F5;
   width: 100%;
   height: 100%;
+  min-height:600px;
   overflow-x: hidden;   /*main content overflow */
   overflow-y: hidden;
 }
@@ -517,6 +521,14 @@ export default {
   margin-left: 100px;
   margin-top: 40px;
   width: 360px;
+}
+
+.content-loading-icon{
+  width: 300px;
+  height: 300px;
+  display:inline-block;
+  vertical-align: middle;
+  background: url('../assets/loading.gif') top no-repeat;
 }
 
 #recipe-grid{
@@ -575,6 +587,7 @@ export default {
 
 .wrapper{
   overflow-x: hidden;
+  overflow-y: hidden;
 }
 
 .go-top{
