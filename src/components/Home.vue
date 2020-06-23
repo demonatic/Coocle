@@ -1,79 +1,70 @@
 <template>
-    <div class="wrapper">
+    <div class="wrapper" overflow-y="scroll">
         <div class="background-img">
           <el-button v-if='header_show_flag' class="go-top" @click="scroll_to_top" circle>
             <i class="fa fa-angle-up"></i>
           </el-button>
-          <div class="on-background-content">
-            <div v-bind:class="header_show_flag?'fixed-search':'float-search'">
-              <header class="top-header" v-if='header_show_flag'>
-                <div class="header-menu-group">
-                  <div class="header-menu" id="find-menu" @click="do_recommendation()">
-                    <i class="fa fa-th"></i>
-                    <span>发现</span>
-                    <transition name='underline-fade'>
-                      <div v-if='recommend_search_toggle' class='underline'></div>
-                    </transition>
-                  </div>
-                  <div class="header-menu" id="search-menu" @click="do_search()">
-                    <i class="fa fa-dot-circle-o"></i>
-                    <span>搜索</span>
-                    <transition name='underline-fade'>
-                      <div v-if='!recommend_search_toggle' class='underline'></div>
-                    </transition>
-                  </div>
-                </div>
-              </header>
-              <div class="search-input">
-                <i class="fa fa-search" @click="do_search()"></i>
-                <input type="text" maxlength="46" v-model="keyword" placeholder="Search recipes"
-                  @keyup="get_suggestion($event)" @keydown.enter="do_search()" @keydown.down="suggestion_down()" @keydown.up.prevent="suggestion_up()"
-                  @focus="show_suggestion()" @blur="hide_suggestion()"
-                >
-                <span class="search-clear" @click="clear_input()">&times;</span>
-                <div class="search-select" v-if="suggestion_show_flag">
-                  <transition-group name="itemfade" tag="ul" mode="out-in" v-cloak>
-                    <li v-for="(value,index) in suggest_items" :class="{selectback:index==current_index}" class="search-select-option search-select-list"
-                      @mouseover="suggestion_hover(index)" @click="suggestion_click(index)" :key="value">
-                      {{value}}
-                    </li>
-                  </transition-group>
-                </div>
-                <div class="search-description">
-                  <span id="search-description-left" v-if='!header_show_flag'>食谱／食材</span>
-                  <span id="search-description-right" v-if='!header_show_flag'>中餐／西餐／面食／甜点／饮料</span>
-                </div>
+          <div v-bind:class="header_show_flag?'fixed-search':'float-search'">
+            <header class="top-header" v-if='header_show_flag'>
+              <div class="header-menu" id="find-menu" @click="do_recommendation()">
+                <i class="fa fa-th"></i>
+                <span>发现</span>
+                <transition name='underline-fade'>
+                  <div v-if='find_search_toggle' class='underline'></div>
+                </transition>
               </div>
+              <div class="header-menu" id="search-menu" @click="do_search()">
+                <i class="fa fa-dot-circle-o"></i>
+                <span>搜索</span>
+                <transition name='underline-fade'>
+                  <div v-if='!find_search_toggle' class='underline'></div>
+                </transition>
+              </div>
+            </header>
+            <div class="search-input">
+              <i class="fa fa-search" @click="do_search()"></i>
+              <input type="text" maxlength="46" v-model="keyword" placeholder="Search recipes"
+                @keyup="get_suggestion($event)" @keydown.enter="do_search()" @keydown.down="suggestion_down()" @keydown.up.prevent="suggestion_up()"
+                @focus="show_suggestion()" @blur="hide_suggestion()"
+              >
+              <span class="search-clear" @click="clear_input()">&times;</span>
+              <div class="search-select" v-if="suggestion_show_flag">
+                <transition-group name="itemfade" tag="ul" mode="out-in" v-cloak>
+                  <li v-for="(value,index) in suggest_items" :class="{selectback:index==current_index}" class="search-select-option search-select-list"
+                    @mouseover="suggestion_hover(index)" @click="suggestion_click(index)" :key="value">
+                    {{value}}
+                  </li>
+                </transition-group>
+              </div>
+            </div>
+            <div class="search-description">
+              <span>食谱／食材 &emsp;&emsp;&emsp;&emsp;中餐／西餐／面食／甜点／饮料</span>
+            </div>
+            <div class="navigator" @click="scroll_to_search_result()">
+              <span v-if="find_search_toggle">为你推荐</span>
+              <span v-if="!find_search_toggle">'{{keyword}}' &nbsp;的搜索结果</span>
+              <i class="fa fa-angle-double-down"></i>
             </div>
           </div>
         </div> <!-- background-image -->
-        <div class="navigator" @click="scroll_to_search_result()">
-            <span v-if="recommend_search_toggle">为你推荐</span>
-            <span v-if="!recommend_search_toggle">'{{searched_keyword}}' &nbsp;的搜索结果</span>
-            <i v-if="!is_loading" class="el-icon-d-arrow-right" style="transform: rotate(90deg); font-size: xx-large"></i>
-            <i v-if="is_loading" class="el-icon-loading" style="font-size: xx-large"></i>
-        </div>
         <div class="main-content">
           <el-tabs class="content-tab" v-model="active_tab_ame" @tab-click="handle_tab_click"
           tab-position="top">
-            <el-tab-pane v-if="recommend_search_toggle" label="推荐食谱" name="first">推荐食谱</el-tab-pane>
-            <el-tab-pane v-if="!recommend_search_toggle" label="综合最佳" name="first">综合最佳</el-tab-pane>
-            <el-tab-pane v-if="!recommend_search_toggle" label="收藏最多" name="second">收藏最多</el-tab-pane>
-            <el-tab-pane v-if="!recommend_search_toggle" label="做过最多" name="third">做过最多</el-tab-pane>
+            <el-tab-pane label="综合最佳" name="first">综合最佳</el-tab-pane>
+            <el-tab-pane label="收藏最多" name="second">收藏最多</el-tab-pane>
+            <el-tab-pane label="做过最多" name="third">做过最多</el-tab-pane>
           </el-tabs>
-          <div v-if="is_loading" class="content-loading-icon"></div>
-         <grid-layout v-if="!is_loading" ref="RecipeGrid"
+         <grid-layout
             id="recipe-grid"
             :layout.sync="layout"
             :col-num="12"
+            :is-draggable="false"
+            :is-resizable="false"
+            :is-mirrored="false"
             :vertical-compact="true"
-            :preventCollision="true"
-            :isDraggable="false"
-            :isResizable="false"
             :use-css-transforms="false"
-            :responsive="false"
-            :margin="[10, 10]"
-            :autoSize="true"
+            :preventCollision="true"
+            :responsive="true"
           >
             <grid-item v-for="item in layout" :key="item.i"
               :x.sync="item.x" :y.sync="item.y" :w.sync="item.w" :h.sync="item.h" :i="item.i"
@@ -81,14 +72,19 @@
               <el-container class="recipe-item">
                 <el-main>
                   <div class="effect-box">
-                    <el-image @load="on_cover_load($event,item.i)" class="recipe-cover" :src="item.info.cover_img"></el-image>
+                    <el-image class="recipe-cover" :src="item.info.cover_img"></el-image>
                     <div class="border-line2">
-                      <p class="recipe-ingredients">{{item.info.ingredient_str}}</p>
+                        <p>{{item.info.ingredient_str}}</p>
                     </div>
                   </div>
                 </el-main>
                 <el-header>
-                  <span class="recipe-title">{{item.info.recipe_name}}</span>
+                <!-- <span class = "recipe-title">{{item.info.recipe_name}}</span> -->
+                 <!-- <span class="recipe-title" @click="itemClick">{{item.info.recipe_name}}</span> -->
+                <span class = "recipe-title">
+                  <router-link :to="{path:'./foodPage',query:{id:item.info}}">
+                            <el-link href="https://element.eleme.io" target="_blank" style="font-size:17px;">{{item.info.recipe_name}}</el-link>
+                            </router-link></span>
                 </el-header>
                 <el-footer class="recipe-ranks">
                   <div class="recipe-like">
@@ -109,6 +105,7 @@
 </template>
 
 <script>
+// import foodPage from './foodPage'
 import VueGridLayout from 'vue-grid-layout'
 var recipeLayout = []
 
@@ -121,8 +118,6 @@ export default {
   data () {
     return {
       keyword: '',
-      searched_keyword: '',
-      is_loading: false,
       suggest_items: [],
       current_index: -1,
       suggestion_show_flag: true,
@@ -130,10 +125,8 @@ export default {
       scroll_top: null,
       active_tab_ame: 'first',
       layout: recipeLayout,
-      recommend_search_toggle: true
+      find_search_toggle: true
     }
-  },
-  created: function () {
   },
   mounted () {
     window.addEventListener('scroll', () => {
@@ -178,7 +171,7 @@ export default {
       // 返回顶部动画特效
       setTimeout(function animation () {
         setTimeout(() => {
-          let targetY = 600
+          let targetY = 680
           if ($this.scroll_top < targetY) {
             let speed = (targetY - $this.scroll_top) / 7 // 步进速度
             $this.scroll_top += (speed < 2.8 ? 2.8 : speed)
@@ -204,16 +197,8 @@ export default {
         this.suggest_items = res.body.suggestions
       })
     },
-    on_cover_load: function (event, i) {
-      let newContainerHeight = event.target.parentElement.parentElement.parentElement.parentElement.scrollHeight
-      this.layout[i].h = newContainerHeight / 150
-      this.$refs.RecipeGrid.layoutUpdate()
-    },
     do_search: function () {
-      this.is_loading = true
-      this.recipeLayout = []
-      this.searched_keyword = this.keyword
-      var searchContent = `{"query": "${this.keyword}","query by": ["recipe_name","ingredients.$items.title","context"],"boost": [5,2.5,1]}`
+      var searchContent = `{"query": "${this.keyword}","query by": ["recipe_name","context"]}`
       console.log(searchContent)
       this.$http.post('http://47.98.241.147:7777/collections/recipe/documents', searchContent).then(function (res) {
         recipeLayout = []
@@ -226,7 +211,7 @@ export default {
               ingredientStr += ', '
             }
             ingredientStr += hit.ingredients[j].title
-            if (ingredientStr.length > 30) {
+            if (ingredientStr.length > 36) {
               ingredientStr += '...'
               break
             }
@@ -236,19 +221,19 @@ export default {
         let index
         for (index in hits) {
           let len = recipeLayout.length
-          // TODO find shortest column to insert
+          console.log('x', 2 * (len % 4), 'y', 2 * (len / 4))
           recipeLayout.push({
             'x': 2 * (len % 4) + 0.4 * (len % 4),
-            'y': 6 * parseInt(len / 4),
+            'y': 2 * parseInt(len / 4),
             'w': 2,
             'h': 2,
             'i': recipeLayout.length,
             'info': hits[index]
           })
         }
-        this.recommend_search_toggle = false
+        this.find_search_toggle = false
         this.layout = recipeLayout
-        this.is_loading = false
+        console.log(this.layout)
       })
     },
     clear_input: function () {
@@ -285,9 +270,12 @@ export default {
       this.suggestion_show_flag = true
     },
     do_recommendation: function () {
-      this.is_loading = true
-      this.recommend_search_toggle = true
+      this.find_search_toggle = true
     }
+    // itemClick:function() {
+    //    this.$router.push('/foodPage');
+    //    console.log(this.info)
+    // }
   }
 }
 
@@ -298,10 +286,9 @@ export default {
 
 .background-img{
   width: 100%;
+  height: 730px;
   position: relative;
   background: url('../assets/bg3.jpg') top no-repeat;
-  padding-bottom: 42%;
-  background-size: 100%;
 }
 
 .background-img:after{
@@ -313,13 +300,8 @@ export default {
   content: "";
   width: 100%;
   height: 100%;
+  height: 730px;
   z-index: 1;
-}
-
-.on-background-content{
-  position: absolute;
-  left: 0; right:0;
-  height:100%;
 }
 
 .top-header{
@@ -332,15 +314,9 @@ export default {
   background: #fafafa;
 }
 
-.header-menu-group{
+.header-menu{
   position: fixed;
   margin-top: 22px;
-  left: 18%;
-}
-
-.header-menu{
-  position: relative;
-  display: inline-block;
   font-size: large;
   cursor: pointer;
   -webkit-user-select: none;
@@ -350,11 +326,11 @@ export default {
 }
 
 #find-menu{
-
+  left: 21%;
 }
 
 #search-menu{
-  margin-left:25px;
+  left: 27%;
 }
 
 .top-header .search-input{
@@ -362,21 +338,21 @@ export default {
 }
 
 .float-search .search-input {
-  width: 40%;
-  min-width: 350px;
+  height: 45px;
+  width: 600px;
   left: 0;
   right: 0;
   margin: 0 auto;
-  margin-top: 8%;
-  position: relative;
+  margin-top: 120px;
+  position: absolute;
   display: flex;
   z-index: 999;
 }
 
 .fixed-search .search-input{
   position: fixed;
-  width: 40%;
-  min-width: 250px;
+  height: 45px;
+  width: 600px;
   left: 0;
   right: 0;
   margin: 0 auto;
@@ -386,7 +362,7 @@ export default {
 }
 
 .fixed-search .search-input input{
-  width: 100%;
+  width: 800px;
   background: rgb(253, 253, 253);
   border: 2px solid #e2e1e1;
   box-shadow: 0 4px 10px rgba(0,0,0,0.12), 0 0 1px rgba(0,0,0,0.05) inset;
@@ -398,7 +374,7 @@ export default {
   border-radius: 39px;
   box-sizing: border-box;
   box-shadow: 0 4px 10px rgba(0,0,0,0.5), 0 0 2px rgba(0,0,0,0.05) inset;
-  width: 84%;
+  width: 500px;
   height: 45px;
   outline:none;
   font-size: 18px;
@@ -499,28 +475,19 @@ export default {
 
 .search-description{
   position: absolute;
-  display: inline-block;
-  width: 100%;
+  left:0; right:0;
+  margin-left: -120px;
   color: white;
-  margin-top:58px;
+  margin-top:180px;
   z-index: 10;
-}
-
-#search-description-left{
-  float: left;
-  padding-left: 5%;
-}
-
-#search-description-right{
-  float: right;
-  padding-right: 22%;
 }
 
 .navigator{
   position: absolute;
-  left: 0; right: 0;
+  left:0; right:0;
+  margin-left: -120px;
   color: white;
-  margin-top: -120px;
+  margin-top:600px;
   z-index: 10;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -545,24 +512,15 @@ export default {
   background-color: #F5F5F5;
   width: 100%;
   height: 100%;
-  min-height:600px;
   overflow-x: hidden;   /*main content overflow */
   overflow-y: hidden;
 }
 
 .content-tab{
   font-size: 0px;
-  margin-left: 6%;
-  margin-top: 30px;
+  margin-left: 100px;
+  margin-top: 40px;
   width: 360px;
-}
-
-.content-loading-icon{
-  width: 300px;
-  height: 350px;
-  display:inline-block;
-  vertical-align: middle;
-  background: url('../assets/loading.gif') top no-repeat;
 }
 
 #recipe-grid{
@@ -573,7 +531,7 @@ export default {
 }
 
 .recipe-item{
-  width: 100%;
+  width: 300px;
   background-color: white;
   border-radius: 6px;
   box-shadow: 0 2px 6px rgba(10, 10, 10, 0.15);
@@ -603,13 +561,9 @@ export default {
 .recipe-cover{
   position: relative;
   display: block;
-  width: 100%; height: 100%;
+  width: 280px; height: 180px;
   border-radius: 5px;
   cursor:pointer;
-}
-
-.recipe-ingredients{
-  position:relative;
 }
 
 .recipe-title{
@@ -625,7 +579,6 @@ export default {
 
 .wrapper{
   overflow-x: hidden;
-  overflow-y: hidden;
 }
 
 .go-top{
@@ -692,8 +645,6 @@ export default {
 
 .el-main{
   padding:10px;
-  overflow-x: hidden;
-  overflow-y: hidden;
 }
 
 .el-header{
@@ -755,9 +706,6 @@ export default {
 
 .effect-box .border-line2 {
   position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   top: 0;
   left: 0;
   width: 100%;
@@ -769,7 +717,6 @@ export default {
   text-transform: uppercase;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-
 }
 
 .effect-box .border-line2::after,
@@ -846,4 +793,13 @@ export default {
   transform: scaleX(0);
 }
 
+a {
+    text-decoration: none;
+    font-family:"Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+    line-height:1.5;
+}
+
+.router-link-active {
+    text-decoration: none;
+}
 </style>
