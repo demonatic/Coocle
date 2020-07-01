@@ -60,9 +60,12 @@
         <h2>{{id.recipe_name}}的制作步骤</h2>
         <div class="mystep">
           <el-header></el-header>
-          <el-row>
-            <div class="line" v-for="(item,index) in id.steps" :key="item">
-              <el-col :span="3" :offset="7">
+          <div class="line step-div" v-for="(item,index) in id.steps" :key="item" >
+          <el-row type = "flex"  justify="center">
+            <!-- <el-steps direction = "vertical" :active="1"> -->
+            <!-- <div class="line" v-for="(item,index) in id.steps" :key="item" style = "height: 210px"> -->
+              <!-- <el-col :span="3" :offset="7"> -->
+              <el-col :span="6">
                 <div
                   class="grid-content bg-color bg-size box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04)"
                 >
@@ -74,14 +77,22 @@
                   >{{item.image}}</el-image>
                 </div>
               </el-col>
-              <el-col :span="8" :offset="0">
+              <!-- <el-col :span="8" :offset="0"> -->
+              <el-col :span="6">
                 <div class="grid-content bg-color bg-size to-leftl">
                   <strong class="strong-align">步骤{{index+1}}</strong>
                   <p class="left-align">{{item.content}}</p>
                 </div>
+                <!-- <div class = "grid-content bg-color bg-size to-leftl " style = "height: 300px;">
+                <el-steps direction="vertical" :active="1">
+                <el-step title="index" description="item.content" v-for=></el-step>
+                </el-steps>
+                </div> -->
               </el-col>
-            </div>
+            <!-- </div> -->
+            <!-- </el-steps> -->
           </el-row>
+          </div>
         </div>
       </el-main>
     </el-container>
@@ -122,7 +133,8 @@ export default {
   data () {
     return {
       srcList: [],
-      has_tip: true
+      has_tip: true,
+      loading: false
     }
   }
 }
@@ -300,9 +312,14 @@ export default {
 
 <style>
 .cover-img-style {
-  width: 700px;
-  height: 400px;
+  /* width: 700px; */
+  /* height: 400px; */
+  width: 100%;
+  height: 100%;
   margin: auto;
+  max-height:650px;
+  max-width: 1000px;
+  vertical-align:middle;
 }
 .el-container-style {
   display: inline-block;
@@ -313,12 +330,17 @@ export default {
   background: #fcffff;
 }
 .bg-size {
-  height: 200px;
+  height: 100%;
+  /* width:100%; */
   margin: 5px 5px 5px 5px;
 }
 .el-row-img-size {
-  height: 190px;
-  width: 200px;
+  /* height: 190px; */
+  /* width: 200px; */
+  position: relative;
+  display:block;
+  /* width: 100%; */
+  height: 100%;
   margin: 10px 10px 10px 10px;
 }
 .img-radius {
@@ -351,5 +373,9 @@ a{
 
 .router-link-active {
     text-decoration: none;
+}
+
+.step-div{
+  margin-top: 10px;
 }
 </style>

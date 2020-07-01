@@ -90,7 +90,7 @@
                 <el-header>
                   <span class = "recipe-title">
                   <router-link :to="{path:'./foodPage',query:{id:item.info}}">
-                            <el-link href="https://element.eleme.io" target="_blank" style="font-size:17px;">{{item.info.recipe_name}}</el-link>
+                            <el-link href="https://element.eleme.io" :underline="false" target="_blank" style="font-size:17px;">{{item.info.recipe_name}}</el-link>
                             </router-link></span>
                 </el-header>
                 <el-footer class="recipe-ranks">
