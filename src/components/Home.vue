@@ -93,15 +93,12 @@
                             <el-link href="https://element.eleme.io" target="_blank" style="font-size:17px;">{{item.info.recipe_name}}</el-link>
                             </router-link></span>
                 </el-header>
-                <el-footer class="recipe-ranks">
-                  <div class="recipe-like">
+                <el-footer class="recipe-footer">
+                  <div class="recipe-ranks">
                     <i class="fa fa-heart"></i>
                     <span style="padding-left:5px">{{item.info.favourite}}</span>
-                  </div>
-                  <div class="recipe-rate">
-                    <el-rate v-model="item.info.rate" disabled show-score score-template="{value}"
-                    text-color=#293F4F :colors="['#F4E04D','#F4E04D','#F4E04D']" disabled-void-color='#DCDCDC'>
-                    </el-rate>
+                    <i class="fa fa-star"></i>
+                    <span>{{item.info.rate}}</span>
                   </div>
                 </el-footer>
               </el-container>
@@ -136,8 +133,6 @@ export default {
       recommend_search_toggle: true
     }
   },
-  created: function () {
-  },
   mounted () {
     window.addEventListener('scroll', () => {
       this.scroll_top = document.documentElement.scrollTop ||
@@ -149,6 +144,7 @@ export default {
         this.header_show_flag = false
       }
     }, true)
+    this.do_recommendation()
   },
   http: {
     headers: {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -211,6 +207,29 @@ export default {
       let newContainerHeight = event.target.parentElement.parentElement.parentElement.parentElement.scrollHeight
       this.layout[i].h = newContainerHeight / 150
       this.$refs.RecipeGrid.layoutUpdate()
+    },
+    do_recommendation: function () {
+      this.is_loading = true
+      this.recommend_search_toggle = true
+      recipeLayout = []
+      for (let i = 0; i < 50; i++) {
+        let docID = (parseInt(Math.random() * 80000)).toString()
+        this.$http.get('http://47.98.241.147:7777/collections/recipe/seq_id/' + docID).then(function (res) {
+          console.log(res.body)
+          let len = recipeLayout.length
+          // TODO find shortest column to insert
+          recipeLayout.push({
+            'x': 2 * (len % 4) + 0.4 * (len % 4),
+            'y': 6 * parseInt(len / 4),
+            'w': 2,
+            'h': 2,
+            'i': recipeLayout.length,
+            'info': res.body
+          })
+        })
+      }
+      this.layout = recipeLayout
+      this.is_loading = false
     },
     do_search: function () {
       this.is_loading = true
@@ -286,10 +305,6 @@ export default {
     },
     show_suggestion: function () {
       this.suggestion_show_flag = true
-    },
-    do_recommendation: function () {
-      this.is_loading = true
-      this.recommend_search_toggle = true
     }
   }
 }
@@ -582,25 +597,30 @@ export default {
   box-shadow: 0 2px 6px rgba(10, 10, 10, 0.15);
 }
 
-.recipe-ranks{
+.recipe-footer{
   border-top: solid 1px rgb(158, 158, 158,0.2);
 }
 
-.recipe-like{
+.recipe-ranks{
   position: relative;
   float: left;
-  margin-top: 5px;
+  margin-top: 1px;
   margin-left: 18px;
 }
 
-.recipe-like i{
+.recipe-ranks .fa-heart{
   color:#D8345F;
 }
 
-.recipe-rate{
-  float: right;
-  margin-top: 5px;
-  margin-right: 15px;
+.recipe-ranks .fa-star{
+  margin-top: 4px;
+  color:#F4E04D;
+  font-size: larger;
+  margin-left: 12px;
+}
+
+.recipe-ranks span{
+  padding-left: 5px;
 }
 
 .recipe-cover{
@@ -766,13 +786,12 @@ export default {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  padding: 2em;
-  font-size: 1.25em;
+  padding: 15%;
+  font-size: large;
   color: #fff;
   text-transform: uppercase;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-
 }
 
 .effect-box .border-line2::after,
