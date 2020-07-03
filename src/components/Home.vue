@@ -208,6 +208,33 @@ export default {
       this.layout[i].h = newContainerHeight / 150
       this.$refs.RecipeGrid.layoutUpdate()
     },
+    trim_ingredient_str: function (ingredients) {
+      let ingredientStr = ''
+      for (let j = 0; j < ingredients.length; j++) {
+        if (ingredientStr.length !== 0) {
+          ingredientStr += ', '
+        }
+        ingredientStr += ingredients[j].title
+        if (ingredientStr.length > 30) {
+          ingredientStr += '...'
+          break
+        }
+      }
+      return ingredientStr
+    },
+    append_one_hit_to_layout: function (hit, recipeLayout) {
+      hit['ingredient_str'] = this.trim_ingredient_str(hit.ingredients)
+      let len = recipeLayout.length
+      // TODO find shortest column to insert
+      recipeLayout.push({
+        'x': 2 * (len % 4) + 0.4 * (len % 4),
+        'y': 6 * parseInt(len / 4),
+        'w': 2,
+        'h': 2,
+        'i': recipeLayout.length,
+        'info': hit
+      })
+    },
     do_recommendation: function () {
       this.is_loading = true
       this.recommend_search_toggle = true
@@ -215,17 +242,7 @@ export default {
       for (let i = 0; i < 50; i++) {
         let docID = (parseInt(Math.random() * 80000)).toString()
         this.$http.get('http://www.coocle.fun:7777/collections/recipe/seq_id/' + docID).then(function (res) {
-          console.log(res.body)
-          let len = recipeLayout.length
-          // TODO find shortest column to insert
-          recipeLayout.push({
-            'x': 2 * (len % 4) + 0.4 * (len % 4),
-            'y': 6 * parseInt(len / 4),
-            'w': 2,
-            'h': 2,
-            'i': recipeLayout.length,
-            'info': res.body
-          })
+          this.append_one_hit_to_layout(res.body, recipeLayout)
         })
       }
       this.layout = recipeLayout
@@ -241,32 +258,7 @@ export default {
         recipeLayout = []
         let hits = res.body.hits
         for (let i = 0; i < hits.length; i++) {
-          let hit = hits[i]
-          let ingredientStr = ''
-          for (let j = 0; j < hit.ingredients.length; j++) {
-            if (ingredientStr.length !== 0) {
-              ingredientStr += ', '
-            }
-            ingredientStr += hit.ingredients[j].title
-            if (ingredientStr.length > 30) {
-              ingredientStr += '...'
-              break
-            }
-          }
-          hit['ingredient_str'] = ingredientStr
-        }
-        let index
-        for (index in hits) {
-          let len = recipeLayout.length
-          // TODO find shortest column to insert
-          recipeLayout.push({
-            'x': 2 * (len % 4) + 0.4 * (len % 4),
-            'y': 6 * parseInt(len / 4),
-            'w': 2,
-            'h': 2,
-            'i': recipeLayout.length,
-            'info': hits[index]
-          })
+          this.append_one_hit_to_layout(hits[i], recipeLayout)
         }
         this.recommend_search_toggle = false
         this.layout = recipeLayout
@@ -421,7 +413,6 @@ export default {
   outline:none;
   font-size: 18px;
   font-weight:lighter;
-  font-family: "europa-regularregular, sans-serif", "Microsoft YaHei";
   float: left;
   padding-left: 10px;
   padding-right: 10px;
@@ -870,11 +861,14 @@ export default {
 
 a {
     text-decoration: none;
-    font-family:"Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
     line-height:1.5;
 }
 
 .router-link-active {
     text-decoration: none;
+}
+
+html *{
+  font-family:"Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
 }
 </style>
