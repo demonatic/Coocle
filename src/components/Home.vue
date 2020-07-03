@@ -197,7 +197,7 @@ export default {
         return
       }
       console.log('call auto suggest')
-      let uriEncoded = encodeURI('http://47.98.241.147:7777/collections/recipe/auto_suggestion?q=' + this.keyword)
+      let uriEncoded = encodeURI('http://www.coocle.fun:7777/collections/recipe/auto_suggestion?q=' + this.keyword)
       this.$http.get(uriEncoded).then(function (res) {
         console.log(res.body.suggestions)
         this.suggest_items = res.body.suggestions
@@ -214,7 +214,7 @@ export default {
       recipeLayout = []
       for (let i = 0; i < 50; i++) {
         let docID = (parseInt(Math.random() * 80000)).toString()
-        this.$http.get('http://47.98.241.147:7777/collections/recipe/seq_id/' + docID).then(function (res) {
+        this.$http.get('http://www.coocle.fun:7777/collections/recipe/seq_id/' + docID).then(function (res) {
           console.log(res.body)
           let len = recipeLayout.length
           // TODO find shortest column to insert
@@ -237,7 +237,7 @@ export default {
       this.searched_keyword = this.keyword
       var searchContent = `{"query": "${this.keyword}","query by": ["recipe_name","ingredients.$items.title","context"],"boost": [5,2.5,1]}`
       console.log(searchContent)
-      this.$http.post('http://47.98.241.147:7777/collections/recipe/documents', searchContent).then(function (res) {
+      this.$http.post('http://www.coocle.fun:7777/collections/recipe/documents', searchContent).then(function (res) {
         recipeLayout = []
         let hits = res.body.hits
         for (let i = 0; i < hits.length; i++) {
