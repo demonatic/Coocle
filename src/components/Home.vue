@@ -54,12 +54,12 @@
             <i v-if="is_loading" class="el-icon-loading" style="font-size: xx-large"></i>
         </div>
         <div class="main-content">
-          <el-tabs class="content-tab" v-model="active_tab_ame" @tab-click="handle_tab_click"
+          <el-tabs class="content-tab" v-model="active_tab_name" @tab-click="handle_tab_click"
           tab-position="top">
             <el-tab-pane v-if="recommend_search_toggle" label="推荐食谱" name="first">推荐食谱</el-tab-pane>
-            <el-tab-pane v-if="!recommend_search_toggle" label="综合最佳" name="first">综合最佳</el-tab-pane>
+            <el-tab-pane v-if="!recommend_search_toggle" label="最佳匹配" name="first">最佳匹配</el-tab-pane>
             <el-tab-pane v-if="!recommend_search_toggle" label="收藏最多" name="second">收藏最多</el-tab-pane>
-            <el-tab-pane v-if="!recommend_search_toggle" label="做过最多" name="third">做过最多</el-tab-pane>
+            <el-tab-pane v-if="!recommend_search_toggle" label="评分最高" name="third">评分最高</el-tab-pane>
           </el-tabs>
           <div v-if="is_loading" class="content-loading-icon"></div>
          <grid-layout v-if="!is_loading" ref="RecipeGrid"
@@ -97,15 +97,12 @@
                             <el-link href="https://element.eleme.io" :underline="false" target="_blank" style="font-size:17px;">{{item.info.recipe_name}}</el-link>
                             </router-link></span>
                 </el-header>
-                <el-footer class="recipe-ranks">
-                  <div class="recipe-like">
+                <el-footer class="recipe-footer">
+                  <div class="recipe-ranks">
                     <i class="fa fa-heart"></i>
                     <span style="padding-left:5px">{{item.info.favourite}}</span>
-                  </div>
-                  <div class="recipe-rate">
-                    <el-rate v-model="item.info.rate" disabled show-score score-template="{value}"
-                    text-color=#293F4F :colors="['#F4E04D','#F4E04D','#F4E04D']" disabled-void-color='#DCDCDC'>
-                    </el-rate>
+                    <i class="fa fa-star"></i>
+                    <span>{{item.info.rate}}</span>
                   </div>
                 </el-footer>
               </el-container>
@@ -135,12 +132,11 @@ export default {
       suggestion_show_flag: true,
       header_show_flag: false,
       scroll_top: null,
-      active_tab_ame: 'first',
       layout: recipeLayout,
-      recommend_search_toggle: true
+      recommend_search_toggle: true,
+      active_tab_name: 'first',
+      active_tab_label: ''
     }
-  },
-  created: function () {
   },
   mounted () {
     window.addEventListener('scroll', () => {
@@ -153,13 +149,15 @@ export default {
         this.header_show_flag = false
       }
     }, true)
+    this.do_recommendation()
   },
   http: {
     headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   },
   methods: {
     handle_tab_click (tab, event) {
-      console.log(tab, event)
+      this.active_tab_label = tab.label
+      this.do_search()
     },
     scroll_to_top () {
       let $this = this
@@ -205,7 +203,7 @@ export default {
         return
       }
       console.log('call auto suggest')
-      let uriEncoded = encodeURI('http://47.98.241.147:7777/collections/recipe/auto_suggestion?q=' + this.keyword)
+      let uriEncoded = encodeURI('https://www.query.coocle.fun/collections/recipe/auto_suggestion?q=' + this.keyword)
       this.$http.get(uriEncoded).then(function (res) {
         console.log(res.body.suggestions)
         this.suggest_items = res.body.suggestions
@@ -216,42 +214,63 @@ export default {
       this.layout[i].h = newContainerHeight / 150
       this.$refs.RecipeGrid.layoutUpdate()
     },
+    trim_ingredient_str: function (ingredients) {
+      let ingredientStr = ''
+      for (let j = 0; j < ingredients.length; j++) {
+        if (ingredientStr.length !== 0) {
+          ingredientStr += ', '
+        }
+        ingredientStr += ingredients[j].title
+        if (ingredientStr.length > 30) {
+          ingredientStr += '...'
+          break
+        }
+      }
+      return ingredientStr
+    },
+    append_one_hit_to_layout: function (hit, recipeLayout) {
+      hit['ingredient_str'] = this.trim_ingredient_str(hit.ingredients)
+      let len = recipeLayout.length
+      // TODO find shortest column to insert
+      recipeLayout.push({
+        'x': 2 * (len % 4) + 0.4 * (len % 4),
+        'y': 6 * parseInt(len / 4),
+        'w': 2,
+        'h': 2,
+        'i': recipeLayout.length,
+        'info': hit
+      })
+    },
+    do_recommendation: function () {
+      this.is_loading = true
+      this.recommend_search_toggle = true
+      recipeLayout = []
+      for (let i = 0; i < 50; i++) {
+        let docID = (parseInt(Math.random() * 80000)).toString()
+        this.$http.get('https://www.query.coocle.fun/collections/recipe/seq_id/' + docID).then(function (res) {
+          this.append_one_hit_to_layout(res.body, recipeLayout)
+        })
+      }
+      this.layout = recipeLayout
+      this.is_loading = false
+    },
     do_search: function () {
       this.is_loading = true
       this.recipeLayout = []
       this.searched_keyword = this.keyword
-      var searchContent = `{"query": "${this.keyword}","query by": ["recipe_name","ingredients.$items.title","context"],"boost": [5,2.5,1]}`
+      var sortBy = ''
+      if (this.active_tab_label === '收藏最多') {
+        sortBy = ',"sort by":["favourite:desc","rate:desc"]'
+      } else if (this.active_tab_label === '评分最高') {
+        sortBy = ',"sort by":["rate:desc","favourite:desc"]'
+      }
+      var searchContent = `{"query": "${this.keyword}","query by": ["recipe_name","ingredients.$items.title","context"],"boost": [15,2.5,1]${sortBy}}`
       console.log(searchContent)
-      this.$http.post('http://47.98.241.147:7777/collections/recipe/documents', searchContent).then(function (res) {
+      this.$http.post('https://www.query.coocle.fun/collections/recipe/documents', searchContent).then(function (res) {
         recipeLayout = []
         let hits = res.body.hits
         for (let i = 0; i < hits.length; i++) {
-          let hit = hits[i]
-          let ingredientStr = ''
-          for (let j = 0; j < hit.ingredients.length; j++) {
-            if (ingredientStr.length !== 0) {
-              ingredientStr += ', '
-            }
-            ingredientStr += hit.ingredients[j].title
-            if (ingredientStr.length > 30) {
-              ingredientStr += '...'
-              break
-            }
-          }
-          hit['ingredient_str'] = ingredientStr
-        }
-        let index
-        for (index in hits) {
-          let len = recipeLayout.length
-          // TODO find shortest column to insert
-          recipeLayout.push({
-            'x': 2 * (len % 4) + 0.4 * (len % 4),
-            'y': 6 * parseInt(len / 4),
-            'w': 2,
-            'h': 2,
-            'i': recipeLayout.length,
-            'info': hits[index]
-          })
+          this.append_one_hit_to_layout(hits[i], recipeLayout)
         }
         this.recommend_search_toggle = false
         this.layout = recipeLayout
@@ -290,10 +309,6 @@ export default {
     },
     show_suggestion: function () {
       this.suggestion_show_flag = true
-    },
-    do_recommendation: function () {
-      this.is_loading = true
-      this.recommend_search_toggle = true
     }
   }
 }
@@ -410,7 +425,6 @@ export default {
   outline:none;
   font-size: 18px;
   font-weight:lighter;
-  font-family: "europa-regularregular, sans-serif", "Microsoft YaHei";
   float: left;
   padding-left: 10px;
   padding-right: 10px;
@@ -586,25 +600,30 @@ export default {
   box-shadow: 0 2px 6px rgba(10, 10, 10, 0.15);
 }
 
-.recipe-ranks{
+.recipe-footer{
   border-top: solid 1px rgb(158, 158, 158,0.2);
 }
 
-.recipe-like{
+.recipe-ranks{
   position: relative;
   float: left;
-  margin-top: 5px;
+  margin-top: 1px;
   margin-left: 18px;
 }
 
-.recipe-like i{
+.recipe-ranks .fa-heart{
   color:#D8345F;
 }
 
-.recipe-rate{
-  float: right;
-  margin-top: 5px;
-  margin-right: 15px;
+.recipe-ranks .fa-star{
+  margin-top: 4px;
+  color:#F4E04D;
+  font-size: larger;
+  margin-left: 12px;
+}
+
+.recipe-ranks span{
+  padding-left: 5px;
 }
 
 .recipe-cover{
@@ -657,32 +676,21 @@ export default {
   color: #acacac;
 }
 
-.columns {
-  /* -moz-columns: 120px;
-  -webkit-columns: 120px; */
-  columns: 300px;
-}
-
 .el-container{
   margin-bottom: 40px !important;
   margin: 0px !important;
 }
 
-.el-col{
-  width: 300px;
-  margin-right: 40px;
-}
-
 .el-rate{
-  display: inline-block;
+  display: inline-block !important;
 }
 
 .el-rate i{
-  font-size: 21px;
+  font-size: 21px !important;
 }
 
 .el-rate span{
-  font-size:medium;
+  font-size:medium !important;
 }
 
 .main-content ul{
@@ -690,14 +698,14 @@ export default {
 }
 
 .content-tab *{
-  color: #3b3b3b;
-  font-size: large;
+  color: #3b3b3b !important;
+  font-size: large !important;
 }
 
 .el-main{
-  padding:10px;
-  overflow-x: hidden;
-  overflow-y: hidden;
+  padding:10px !important;
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
 }
 
 .el-header{
@@ -708,34 +716,34 @@ export default {
 
 .el-footer{
   height: 30px !important;
-  padding-left: 0px;
-  padding-right: 0px;
+  padding-left: 0px !important;
+  padding-right: 0px !important;
 }
 
 </style>
 
 <style>
 .el-tabs__content{
-  height: 0px;
+  height: 0px !important;
 }
 .el-tabs__active-bar{
-  background-color: #eb3c68;
-  height: 3px;
+  background-color: #eb3c68 !important;
+  height: 3px !important;
 }
 
 .el-tabs__nav-wrap:after{
-  background-color: #F5F5F5;
+  background-color: #F5F5F5 !important;
 }
 
 .el-tabs__item:hover{
-  color: #ffd342;
+  color: #ffd342 !important;
 }
 
 .el-tabs__item.is-active{
-  color: #333333;
+  color: #333333 !important;
 }
 .el-tabs__item{
-  color: #acacac;
+  color: #acacac !important;
 }
 
 .effect-box {
@@ -770,13 +778,12 @@ export default {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  padding: 2em;
-  font-size: 1.25em;
+  padding: 15%;
+  font-size: large;
   color: #fff;
   text-transform: uppercase;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-
 }
 
 .effect-box .border-line2::after,
@@ -855,11 +862,14 @@ export default {
 
 a {
     text-decoration: none;
-    font-family:"Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
     line-height:1.5;
 }
 
 .router-link-active {
     text-decoration: none;
+}
+
+html *{
+  font-family:"Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
 }
 </style>
