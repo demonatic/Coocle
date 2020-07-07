@@ -60,7 +60,8 @@
         <h2>{{id.recipe_name}}的制作步骤</h2>
         <div class="mystep">
           <el-header></el-header>
-          <div class="line step-div" v-for="(item,index) in id.steps" :key="item" >
+          <el-steps direction="vertical" :active="1">
+          <div class="line step-div" v-for="(item,index) in id.steps" :key="index" >
           <el-row type = "flex"  justify="center">
             <!-- <el-steps direction = "vertical" :active="1"> -->
             <!-- <div class="line" v-for="(item,index) in id.steps" :key="item" style = "height: 210px"> -->
@@ -78,11 +79,12 @@
                 </div>
               </el-col>
               <!-- <el-col :span="8" :offset="0"> -->
+              <!-- <el-step title="步骤" description="sddddddddddddddddddddddddddddddddddddddddd"></el-step> -->
               <el-col :span="6">
-                <div class="grid-content bg-color bg-size to-leftl">
+                <!-- <div class="grid-content bg-color bg-size to-leftl"> -->
                   <strong class="strong-align">步骤{{index+1}}</strong>
                   <p class="left-align">{{item.content}}</p>
-                </div>
+                <!-- </div> -->
                 <!-- <div class = "grid-content bg-color bg-size to-leftl " style = "height: 300px;">
                 <el-steps direction="vertical" :active="1">
                 <el-step title="index" description="item.content" v-for=></el-step>
@@ -93,6 +95,7 @@
             <!-- </el-steps> -->
           </el-row>
           </div>
+          </el-steps>
         </div>
       </el-main>
     </el-container>
@@ -110,15 +113,18 @@
 </template>
 
 <script>
+// JSON.parse(this.$route.query.id)
 export default {
-  name: 'HelloWorld',
+  name: '',
   sites: [],
   books: [],
   // props: {
   //   msg: String
   // },
   created () {
-    this.id = this.$route.query.id
+    let idTemp = this.$route.query
+    this.id = JSON.parse(idTemp.id)
+    // console.log(this.id)
     console.log('test')
     console.log(this.id)
     let imgstr = []
@@ -130,6 +136,12 @@ export default {
     this.srcList = imgstr
     console.log(this.srcList)
   },
+  // beforeRouterEnter(to, from, next) {
+  //     next(vm => {
+  //       vm.testid = JSON.parse(to.query.id)
+  //     })
+  // }
+  // ,
   data () {
     return {
       srcList: [],
@@ -137,6 +149,10 @@ export default {
       loading: false
     }
   }
+  // beforeDestroy()
+  // {
+  //   localStorage.removeItem('tempData')
+  // }
 }
 </script>
 
@@ -308,9 +324,6 @@ export default {
   text-align: left;
 }
 
-</style>
-
-<style>
 .cover-img-style {
   /* width: 700px; */
   /* height: 400px; */
@@ -342,6 +355,11 @@ export default {
   /* width: 100%; */
   height: 100%;
   margin: 10px 10px 10px 10px;
+  /* max-height:352px; */
+  max-height:450px;
+  /* max-width: ; */
+  max-width: 352px;
+  /* vertical-align: middle */
 }
 .img-radius {
   border-radius: 25px;
@@ -378,4 +396,9 @@ a{
 .step-div{
   margin-top: 10px;
 }
+
+</style>
+
+<style>
+
 </style>

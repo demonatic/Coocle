@@ -81,7 +81,10 @@
               <el-container class="recipe-item">
                 <el-main>
                   <div class="effect-box">
-                    <el-image @load="on_cover_load($event,item.i)" class="recipe-cover" :src="item.info.cover_img"></el-image>
+                    <!-- <router-link :to="{path:'./foodPage',query:{id:JSON.stringify(item.info)}}"> -->
+                   <el-image @load="on_cover_load($event,item.i)" class="recipe-cover" :src="item.info.cover_img"></el-image>
+                    <!-- </el-link> -->
+                    <!-- </router-link>  -->
                     <div class="border-line2">
                       <p class="recipe-ingredients">{{item.info.ingredient_str}}</p>
                     </div>
@@ -89,7 +92,8 @@
                 </el-main>
                 <el-header>
                   <span class = "recipe-title">
-                  <router-link :to="{path:'./foodPage',query:{id:item.info}}">
+                  <!-- <router-link :to="{path:'./foodPage',query:{id:item.info}}"> -->
+                  <router-link :to="{path:'./foodPage',query:{id:JSON.stringify(item.info)}}">
                             <el-link href="https://element.eleme.io" :underline="false" target="_blank" style="font-size:17px;">{{item.info.recipe_name}}</el-link>
                             </router-link></span>
                 </el-header>
@@ -652,9 +656,6 @@ export default {
   margin-left: -500px;
   color: #acacac;
 }
-</style>
-
-<style>
 
 .columns {
   /* -moz-columns: 120px;
@@ -711,6 +712,9 @@ export default {
   padding-right: 0px;
 }
 
+</style>
+
+<style>
 .el-tabs__content{
   height: 0px;
 }

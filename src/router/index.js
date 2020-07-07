@@ -9,12 +9,18 @@ export default new Router({
     {
       path: '/',
       // name: 'Home',
-      component: Home
+      component: Home,
+      meta: {
+        keepAlive: true // 需要被缓存
+      }
     },
     {
       path: '/foodPage',
       // name: 'foodPage',
-      component: foodPage
+      component: foodPage,
+      meta: {
+        keepAlive: true // 需要被缓存
+      }
     }
   ]
 })
