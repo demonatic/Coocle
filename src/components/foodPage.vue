@@ -30,7 +30,7 @@
           </i>
         </div>
       </el-main>
-      <el-main class = "text">
+      <el-main class = "text" v-show = "has_context">
         <!-- <p>虾仁炒西兰花的营养成分高，而且十分全面，主要包括蛋白质、碳水化合物、脂肪、矿物质、维生素C和胡萝卜素等！</p> -->
         <p>{{id.context}}</p>
       </el-main>
@@ -63,9 +63,6 @@
           <el-steps direction="vertical" :active="1">
           <div class="line step-div" v-for="(item,index) in id.steps" :key="index" >
           <el-row type = "flex"  justify="center">
-            <!-- <el-steps direction = "vertical" :active="1"> -->
-            <!-- <div class="line" v-for="(item,index) in id.steps" :key="item" style = "height: 210px"> -->
-              <!-- <el-col :span="3" :offset="7"> -->
               <el-col :span="6">
                 <div
                   class="grid-content bg-color bg-size box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04)"
@@ -78,18 +75,9 @@
                   >{{item.image}}</el-image>
                 </div>
               </el-col>
-              <!-- <el-col :span="8" :offset="0"> -->
-              <!-- <el-step title="步骤" description="sddddddddddddddddddddddddddddddddddddddddd"></el-step> -->
               <el-col :span="6">
-                <!-- <div class="grid-content bg-color bg-size to-leftl"> -->
                   <strong class="strong-align">步骤{{index+1}}</strong>
                   <p class="left-align">{{item.content}}</p>
-                <!-- </div> -->
-                <!-- <div class = "grid-content bg-color bg-size to-leftl " style = "height: 300px;">
-                <el-steps direction="vertical" :active="1">
-                <el-step title="index" description="item.content" v-for=></el-step>
-                </el-steps>
-                </div> -->
               </el-col>
             <!-- </div> -->
             <!-- </el-steps> -->
@@ -103,13 +91,13 @@
       <el-header>
         <h2>{{id.recipe_name}}的烹饪技巧</h2>
       </el-header>
+      <div class = "tip-text">
       <el-main class = "text">
         <p>{{id.tips}}</p>
       </el-main>
+      </div>
     </el-container>
   </div>
-  <!-- </el-container> -->
-  <!-- </div>   -->
 </template>
 
 <script>
@@ -118,9 +106,6 @@ export default {
   name: '',
   sites: [],
   books: [],
-  // props: {
-  //   msg: String
-  // },
   created () {
     let idTemp = this.$route.query
     this.id = JSON.parse(idTemp.id)
@@ -132,27 +117,29 @@ export default {
       imgstr.push(this.id.steps[i].image)
     }
     if (this.id.tips === '') this.has_tip = false
-
+    if (this.id.has_context === '') this.has_context = false
     this.srcList = imgstr
     console.log(this.srcList)
   },
-  // beforeRouterEnter(to, from, next) {
-  //     next(vm => {
-  //       vm.testid = JSON.parse(to.query.id)
-  //     })
-  // }
-  // ,
   data () {
     return {
       srcList: [],
       has_tip: true,
-      loading: false
+      loading: false,
+      has_context: true
     }
+  },
+  beforeRouterLeave (to, from, next) {
+    if (to.path === '/') {
+      from.meta.keepAlive = true
+    } else {
+      from.meta.keepAlive = false
+    }
+    console.log('-------------------------')
+    next()
+  },
+  beforeDestroy () {
   }
-  // beforeDestroy()
-  // {
-  //   localStorage.removeItem('tempData')
-  // }
 }
 </script>
 
@@ -167,13 +154,6 @@ export default {
 .strong-align {
   text-align: left;
 }
-/* .left-span{
-  display:block; width: 70px; float:left;
-  text-emphasis:yes;
-} */
-/* .left-span{
-  height: 50px;
-} */
 #foodPage {
   overflow-x: hidden;
   height: 100vh;
@@ -300,8 +280,10 @@ export default {
   text-align: left;
 }
 .text > p{
-   width:70%;
+   width:50%;
    margin:auto;
+   text-align: left;
+   /* text-indent: 2em; */
 }
 
 .like-numbers {
@@ -395,6 +377,11 @@ a{
 
 .step-div{
   margin-top: 10px;
+}
+
+.tip-text{
+  margin: auto;
+  width: 70%;
 }
 
 </style>

@@ -82,10 +82,10 @@
                 <el-main>
                   <div class="effect-box">
                     <!-- <router-link :to="{path:'./foodPage',query:{id:JSON.stringify(item.info)}}"> -->
-                   <el-image @load="on_cover_load($event,item.i)" class="recipe-cover" :src="item.info.cover_img"></el-image>
+                   <el-image  @load="on_cover_load($event,item.i)" class="recipe-cover" :src="item.info.cover_img"></el-image>
                     <!-- </el-link> -->
                     <!-- </router-link>  -->
-                    <div class="border-line2">
+                    <div class="border-line2"  @click = "goFoodPage(item)">
                       <p class="recipe-ingredients">{{item.info.ingredient_str}}</p>
                     </div>
                   </div>
@@ -309,6 +309,17 @@ export default {
     },
     show_suggestion: function () {
       this.suggestion_show_flag = true
+    },
+    goFoodPage: function (item) {
+      this.$router.push({path: './foodPage', query: {id: JSON.stringify(item.info)}})
+    },
+    beforeRouterLeave (to, from, next) {
+      if (to.path === '/foodPage') {
+        from.meta.keepAlive = true
+      } else {
+        from.meta.keepAlive = false
+      }
+      next()
     }
   }
 }
