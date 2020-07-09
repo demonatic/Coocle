@@ -4,11 +4,11 @@
     <header class="top-header">
       <div class="header-menu" id="find-menu">
         <i class="fa fa-th"></i>
-        <span>发现</span>
+        <span><router-link :to="{path:'./'}">返回</router-link></span>
       </div>
       <div class="header-menu" id="search-menu">
         <i class="fa fa-dot-circle-o"></i>
-        <span><router-link :to="{path:'./'}">搜索</router-link></span>
+        <span><router-link :to="{path:'./'}">主页</router-link></span>
       </div>
     </header>
     <el-container class="el-container-style">
@@ -139,6 +139,9 @@ export default {
     next()
   },
   beforeDestroy () {
+  },
+  routerback: function () {
+    this.$router.back(-1)
   }
 }
 </script>
