@@ -70,9 +70,7 @@
             :preventCollision="true"
             :isDraggable="false"
             :isResizable="false"
-            :use-css-transforms="false"
-            :responsive="false"
-            :margin="[10, 10]"
+            :use-css-transforms="true"
             :autoSize="true"
           >
             <grid-item v-for="item in layout" :key="item.i"
@@ -202,7 +200,6 @@ export default {
       if (event.keyCode === 38 || event.keyCode === 40) { // ignore arrow up or down
         return
       }
-      console.log('call auto suggest')
       let uriEncoded = encodeURI('https://www.query.coocle.fun/collections/recipe/auto_suggestion?q=' + this.keyword)
       this.$http.get(uriEncoded).then(function (res) {
         console.log(res.body.suggestions)
@@ -255,6 +252,9 @@ export default {
       this.is_loading = false
     },
     do_search: function () {
+      if (!this.keyword) {
+        return
+      }
       this.is_loading = true
       this.recipeLayout = []
       this.searched_keyword = this.keyword
