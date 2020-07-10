@@ -106,6 +106,13 @@
               </el-container>
             </grid-item>
           </grid-layout>
+          <footer style="color:gray">
+            <p>
+              ©️2020 demonatic - Just a demo for
+                <a href="https://github.com/demonatic/Skilo">Skilo</a>
+              search engine
+            </p>
+          </footer>
         </div> <!-- main-content -->
     </div>
 </template>
